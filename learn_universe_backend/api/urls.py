@@ -4,17 +4,26 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    path("user/token", api_views.MyTokenObtainPairView.as_view()),
-    path("user/token/refresh/", TokenRefreshView.as_view()),
-    path("user/register/", api_views.RegisterView.as_view()),
-    path("user/reset-pass/<email>/", api_views.PasswordResetEmailVerifyAPIView.as_view()),
-    path("user/change-pass/", api_views.PasswordChangeAPIView.as_view()),
+    # Auth
+    path("user/token", api_views.MyTokenObtainPairView.as_view(), name="token_obtain"),
+    path("user/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("user/register/", api_views.RegisterView.as_view(), name="register"),
+    path("user/reset-pass/<email>/", api_views.PasswordResetEmailVerifyAPIView.as_view(), name="password_reset"),
+    path("user/change-pass/", api_views.PasswordChangeAPIView.as_view(), name="password_change"),
 
+    # Core - Course
+    path("course/category", api_views.CategoryListAPIView.as_view(), name="category_list"),
+    path("course/course-list", api_views.CourseListAPIView.as_view(), name="course_list"),
+    path("course/course-detail/<slug>/", api_views.CourseDetailAPIView.as_view(), name="course_detail"),
 
-    #Core
-    path("course/category", api_views.CategoryListAPIView.as_view()),
-    path("course/course-list", api_views.CourseListAPIView.as_view()),
-    path("course/course-detail/<slug>", api_views.CourseDetailAPIView.as_view()),
-path("course/cart", api_views.CartAPIView.as_view()),
+    # Cart
+    path("course/cart", api_views.CartAPIView.as_view(), name="cart_create"),
+    path("course/cart-list/<cart_id>/", api_views.CartListAPIView.as_view(), name="cart_list"),
+    path("course/cart-item-delete/<cart_id>/<course>/", api_views.CartItemDeleteAPIView.as_view(), name="cart_item_delete"),
+    path("cart/stats/<cart_id>/", api_views.CartStatsAPIView.as_view(), name="cart_stats"),
 
+    # Order
+    path("order/create-order/", api_views.CartOrderCreateAPIView.as_view(), name="order_create"),
+    path("order/checkout/<oid>/", api_views.OrderCheckoutAPIView.as_view(), name="order_checkout"),
+    path("order/coupon/", api_views.CouponApplyAPIView.as_view(), name="coupon_apply"),
 ]

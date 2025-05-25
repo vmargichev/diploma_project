@@ -3,17 +3,19 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.db import transaction
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import render, get_object_or_404
 from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import serializer as api_serializer
 from api.enums import PlatformStatus, TeacherStatus
-from api.models import Category, Course, Cart, Country
+from api.models import Category, Course, Cart, Country, CartOrder, CartOrderItem, Coupon
 from api.serializer import PasswordResetConfirmSerializer
 from api.utils import generate_otp
 from userauths.models import User, Profile
@@ -183,25 +185,32 @@ class CartAPIView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        course_id = Course.objects.get(name = request.data.get("course")).course_id
-        country = request.data.get("country")
-
-        if not course_id:
+        course_pk = request.data.get("course")
+        if not course_pk:
             return Response({"detail": "course_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            course = Course.objects.get(id=course_id)
+            course = Course.objects.get(pk=course_pk)
         except Course.DoesNotExist:
             return Response({"detail": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        user = request.user if request.user.is_authenticated else None
+        country_name = request.data.get("country")
+        if not country_name:
+            return Response({"detail": "country is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Optional: Prevent adding same course twice
+        try:
+            country_obj = Country.objects.get(name=country_name, active=True)
+        except Country.DoesNotExist:
+            return Response({"detail": "Country not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # user = request.user if request.user.is_authenticated else None #TODO maybe is_auth is good should check it
+        user = User.objects.get(pk=request.data.get("user"))
+
         if user and Cart.objects.filter(course=course, user=user).exists():
             return Response({"detail": "Course already in cart."}, status=status.HTTP_400_BAD_REQUEST)
 
         price = course.price or Decimal("0.00")
-        tax_fee = price * (Country.objects.get(name=country.name).tax_rate / 100)  # example: 10% tax
+        tax_fee = price * (country_obj.tax_rate / Decimal("100"))
         total = price + tax_fee
 
         cart = Cart.objects.create(
@@ -210,8 +219,182 @@ class CartAPIView(generics.CreateAPIView):
             price=price,
             tax_fee=tax_fee,
             total=total,
-            country=country
+            country=country_obj
         )
 
         serializer = self.get_serializer(cart)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class CartListAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.CartSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        cart_id = self.kwargs.get("cart_id")
+        if not cart_id:
+            return Cart.objects.none()
+        return Cart.objects.filter(cart_id=cart_id)
+
+class CartItemDeleteAPIView(generics.DestroyAPIView):
+    serializer_class = api_serializer.CartSerializer
+    permission_classes = [AllowAny]
+
+    def get_object(self):
+        cart_id = self.kwargs["cart_id"]
+        course = self.kwargs["course"]
+
+        return Cart.objects.filter(cart_id=cart_id, course=course).first()
+
+# class CartStatAPIView(generics.RetrieveAPIView):
+#     queryset = Cart.objects.all()
+#     serializer_class = api_serializer.CartSerializer
+#     permission_classes = [AllowAny]
+#     lookup_field = "cart_id"
+#
+#     def get(self, request, *args, **kwargs):
+#
+#         queryset = self.get_queryset()
+#
+#         total_price = 0.00
+#         total_tax = 0.00
+#         total_total = 0.00
+#
+#         for item in queryset:
+#             total_price += float(item.price)
+#             total_tax += float(item.tax_fee)
+#             total_total += float(item.total)
+#
+#         return Response({"price": total_price,
+#                          "tax": total_tax,
+#                          "total": round(total_total, 2), })
+
+class CartStatsAPIView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, cart_id):
+        carts = Cart.objects.filter(cart_id=cart_id)
+
+        total_price = sum(float(c.price) for c in carts)
+        total_tax = sum(float(c.tax_fee) for c in carts)
+        total_total = sum(float(c.total) for c in carts)
+
+        return Response({
+            "total_price": total_price,
+            "total_tax": total_tax,
+            "total_total": round(total_total, 2),
+        })
+
+class CartOrderCreateAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    queryset = CartOrder.objects.all()
+    serializer_class = api_serializer.CartOrderSerializer
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+
+        full_name = data.get("full_name")
+        email = data.get("email")
+        country = data.get("country")
+        cart_id = data.get("cart_id")
+        user_id = data.get("user_id")
+
+        if not user_id or not cart_id:
+            return Response({"detail": "user_id and cart_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(uuid=user_id)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        cart_items = Cart.objects.filter(cart_id=cart_id)
+
+        if not cart_items.exists():
+            return Response({"detail": "No cart items found."}, status=status.HTTP_404_NOT_FOUND)
+
+        total_price = Decimal("0.00")
+        total_tax = Decimal("0.00")
+        total_initial_total = Decimal("0.00")
+        total_total = Decimal("0.00")
+
+        with transaction.atomic():
+            order = CartOrder.objects.create(
+                full_name=full_name,
+                email=email,
+                country=country,
+                student=user,
+            )
+
+            for item in cart_items:
+                CartOrderItem.objects.create(
+                    order=order,
+                    course=item.course,
+                    price=item.price,
+                    tax_fee=item.tax_fee,
+                    total=item.total,
+                    initial_total=item.total,
+                    teacher=item.course.teacher,
+                )
+
+                order.teachers.add(item.course.teacher)
+
+                total_price += item.price
+                total_tax += item.tax_fee
+                total_initial_total += item.total
+                total_total += item.total
+
+            order.sub_total = total_price
+            order.tax_fee = total_tax
+            order.initial_total = total_initial_total
+            order.total = total_total
+            order.save()
+
+        return Response({"message": "Order created successfully."}, status=status.HTTP_201_CREATED)
+
+class OrderCheckoutAPIView(generics.RetrieveAPIView):
+    queryset = CartOrder.objects.all()
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [AllowAny]
+    lookup_field = "oid"
+
+class CouponApplyAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        coupon_code = request.data.get("coupon_code")
+        oid = request.data.get("oid")
+
+        if not coupon_code or not oid:
+            return Response({"message": "code or oid not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        coupon = Coupon.objects.get(code=coupon_code)
+        order = CartOrder.objects.get(oid=oid)
+
+        if coupon:
+            if order.coupons.filter(id=coupon.id).exists():
+                return Response({"message": "Coupon already applied."}, status=status.HTTP_200_OK)
+
+            order_items = CartOrderItem.objects.filter(order=order, teacher=coupon.teacher)
+            with transaction.atomic():
+                for item in order_items:
+                    discount = item.price * coupon.discount / 100
+                    item.total -= discount
+                    item.price -= discount
+                    item.saved += discount
+                    item.applied_coupon = True
+                    item.coupons.add(coupon)
+
+                    order.coupons.add(coupon)
+                    order.total -= discount
+                    order.sub_total -= discount
+                    order.saved += discount
+
+                    item.save()
+                    order.save()
+                    coupon.used_by.add(order.student)
+            return Response({"message": "Coupon Successfully Aplied"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "coupon not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
