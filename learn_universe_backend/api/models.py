@@ -197,7 +197,7 @@ class CartOrder(models.Model):
 
 
 class CartOrderItem(models.Model):
-    order = models.ForeignKey(CartOrder, on_delete=models.CASCADE, related_name="orderitem")
+    order = models.ForeignKey(CartOrder, on_delete=models.CASCADE, related_name="order_item")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="order_item")
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=12, default=0.00, decimal_places=2)

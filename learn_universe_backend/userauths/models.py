@@ -12,7 +12,7 @@ class User(AbstractUser):
     otp = models.CharField(max_length=6, null = True) ##Keep in mind this one
     refresh_token = models.CharField(max_length=1000, null = True)
     created_at = models.DateTimeField(auto_now_add=True)
-    uuid = models.UUIDField(default=uuid.uuid4,editable=False , unique=True)
+    uuid = models.UUIDField(default=uuid.uuid4,editable=True , unique=True) #TODO
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"] ##TODO
@@ -24,6 +24,7 @@ class User(AbstractUser):
             self.full_name = self.email.split("@")[0]
 
         super(User, self).save(*args, **kwargs)
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     image = models.ImageField(default = "default_profile_pic.jpg", null = True)

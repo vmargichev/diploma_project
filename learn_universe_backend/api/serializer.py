@@ -197,7 +197,7 @@ class CartOrderItemSerializer(serializers.ModelSerializer):
 
 
 class CartOrderSerializer(serializers.ModelSerializer):
-    order_items = CartOrderItemSerializer(many=True)
+    order_item = CartOrderItemSerializer(many=True)
 
     class Meta:
         fields = '__all__'
