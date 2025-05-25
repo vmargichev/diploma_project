@@ -183,25 +183,31 @@ class CartAPIView(generics.CreateAPIView):
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        course_id = Course.objects.get(name = request.data.get("course")).course_id
-        country = request.data.get("country")
-
-        if not course_id:
+        course_pk = request.data.get("course")
+        if not course_pk:
             return Response({"detail": "course_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            course = Course.objects.get(id=course_id)
+            course = Course.objects.get(pk=course_pk)
         except Course.DoesNotExist:
             return Response({"detail": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        country_name = request.data.get("country")
+        if not country_name:
+            return Response({"detail": "country is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            country_obj = Country.objects.get(name=country_name, active=True)
+        except Country.DoesNotExist:
+            return Response({"detail": "Country not found."}, status=status.HTTP_404_NOT_FOUND)
+
         user = request.user if request.user.is_authenticated else None
 
-        # Optional: Prevent adding same course twice
         if user and Cart.objects.filter(course=course, user=user).exists():
             return Response({"detail": "Course already in cart."}, status=status.HTTP_400_BAD_REQUEST)
 
         price = course.price or Decimal("0.00")
-        tax_fee = price * (Country.objects.get(name=country.name).tax_rate / 100)  # example: 10% tax
+        tax_fee = price * (country_obj.tax_rate / Decimal("100"))
         total = price + tax_fee
 
         cart = Cart.objects.create(
@@ -210,7 +216,7 @@ class CartAPIView(generics.CreateAPIView):
             price=price,
             tax_fee=tax_fee,
             total=total,
-            country=country
+            country=country_obj
         )
 
         serializer = self.get_serializer(cart)
