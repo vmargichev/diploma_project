@@ -1,14 +1,17 @@
 from decimal import Decimal
 
+import requests
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.db import transaction
 from django.utils.encoding import force_bytes, force_str
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from exceptiongroup import catch
+# from networkx.algorithms.bipartite.cluster import modes
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,13 +20,17 @@ from api import serializer as api_serializer
 from api.enums import PlatformStatus, TeacherStatus
 from api.models import Category, Course, Cart, Country, CartOrder, CartOrderItem, Coupon
 from api.serializer import PasswordResetConfirmSerializer
-from api.utils import generate_otp
+from api.utils import generate_otp, get_paypal_access_token
 from userauths.models import User, Profile
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import generics, status, permissions
 from rest_framework.permissions import AllowAny
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = api_serializer.MyTokenObtainPairSerializer
 
@@ -396,5 +403,114 @@ class CouponApplyAPIView(generics.CreateAPIView):
         else:
             return Response({"message": "coupon not found"}, status=status.HTTP_404_NOT_FOUND)
 
+class StripeCheckoutAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    permission_classes = [AllowAny]
 
+    def create(self, request, *args, **kwargs):
 
+        order_id = self.kwargs['order_id']
+        order = CartOrder.objects.get(oid=order_id)
+
+        if not order:
+            return Response({"message": "Order Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                customer_email = order.email,
+                payment_method_types=['card'],
+                line_items=[
+                    {
+                        'price_data': {
+                            'currency': 'bgn',
+                            'product_data' : {
+                                'name' : order.full_name,
+                            },
+                            'unit_amount': int(order.total * 100)
+                        },
+                        'quantity': 1
+                    },
+                ],
+                mode='payment',
+                success_url = f"{settings.FRONTEND_SITE_URL}payment-success/{order_id}?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url = f"{settings.FRONTEND_SITE_URL}payment-failed/"
+            )
+
+            order.stripe_session_id = checkout_session.id
+
+            return redirect(checkout_session.url)
+        except stripe.error.StripeError as e:
+            return Response({"message": f"Something went wrong during payment Error {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+class PaymentSuccessAPIView(generics.CreateAPIView):
+    serializer_class = api_serializer.CartOrderSerializer
+    queryset = CartOrder.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        order_id = request.data.get('order_id')
+        session_id = request.data.get('session_id')
+        paypal_order_id = request.data.get('paypal_order_id')
+
+        try:
+            order = CartOrder.objects.get(oid=order_id)
+        except CartOrder.DoesNotExist:
+            return Response({"message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if paypal_order_id:
+            # First, get PayPal access token (reuse your function or inline here)
+            try:
+                access_token = get_paypal_access_token(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_SECRET)
+            except Exception as e:
+                return Response({"message": "Failed to get PayPal access token", "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            paypal_api_url = f"https://api-m.sandbox.paypal.com/v2/checkout/orders/{paypal_order_id}"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+
+            paypal_response = requests.get(paypal_api_url, headers=headers)
+            if paypal_response.status_code == 200:
+                order_data = paypal_response.json()
+                # Check order status
+                if order_data.get("status") == "COMPLETED":
+                    # Mark order as paid, update your DB as needed
+                    order.is_paid = True
+                    order.save()
+                    # You can also process order items here if needed
+
+                    return Response({"message": "Payment successful and verified with PayPal"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"message": f"PayPal order status is {order_data.get('status')}, not completed"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Failed to verify PayPal order", "details": paypal_response.text}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+
+            if session_id:
+
+                try:
+
+                    session = stripe.checkout.Session.retrieve(session_id)
+
+                except Exception as e:
+
+                    return Response({"message": "Failed to retrieve Stripe session", "error": str(e)},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                if session.payment_status == "paid":
+
+                    if order.payment_status == "Processing":
+                        order.payment_status = "Paid"
+
+                        order.save()
+
+                    return Response({"message": "Payment verified and order updated"}, status=status.HTTP_200_OK)
+
+                else:
+
+                    return Response({"message": f"Payment status is {session.payment_status}"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+            else:
+
+                return Response({"message": "No payment session_id provided"}, status=status.HTTP_400_BAD_REQUEST)
