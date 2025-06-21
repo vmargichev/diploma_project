@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
-import { setUser } from '../utils/auth';
-export const MainWrapper = ({children}) => {
-    const [ loading, setLoading ] = useState(true);
+import {logout, setUser} from '../utils/auth';
+import { useNavigate } from "react-router-dom";
 
+
+export const MainWrapper = ({children}) => {
+    const navigate = useNavigate();
+    const [ loading, setLoading ] = useState(true);
     useEffect(() => {
         const handler = async () => {
             setLoading(true);
-
-            await setUser();
+            try{
+                await setUser();
+            }catch (error) {
+                console.log("Auth error:", error);
+                logout()
+                navigate("/login/")
+            }
 
             setLoading(false);
         };

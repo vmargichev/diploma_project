@@ -13,7 +13,7 @@ export const getRefreshToken = async () => {
   }
 
   try {
-    const { data } = await axios.post("token/refresh/", { refresh: refreshToken });
+    const { data } = await apiInstance.post("user/token/refresh/", { refresh: refreshToken });
     return data;
   } catch (error) {
     const errorMessage = error.response?.data?.detail || error.message || "Failed to refresh token.";
@@ -56,6 +56,8 @@ export const login = async (email, password) => {
 
 export const register = async (full_name, email, password, password2) => {
   try {
+    Cookie.remove("access_token");
+    Cookie.remove("refresh_token");
     const { data, status } = await apiInstance.post("user/register/", {
       full_name,
       email,
@@ -99,22 +101,30 @@ export const logout = () => {
 };
 
 export const setUser = async () => {
+
   const access_token = Cookie.get("access_token");
   const refresh_token = Cookie.get("refresh_token");
 
   if (!access_token || !refresh_token) {
-    return;
+    throw new Error("No tokens found");
   }
 
-  if (isAccessTokenExpired(access_token)){
-    const response = await getRefreshToken();
-    if (response && response.access && response.refresh) {
-    setAuthUser(response.access, response.refresh);
+
+  if (isAccessTokenExpired(access_token)) {
+    try {
+      const response = await getRefreshToken();
+
+      if (!response || !response.access) {
+        throw new Error("Invalid refresh response");
+      }
+
+      setAuthUser(response.access, response.refresh || refresh_token);
+    } catch (error) {
+      Cookie.remove("access_token");
+      Cookie.remove("refresh_token");
+      throw new Error("refreshed the tokens");
+    }
   } else {
-    console.warn("Failed to refresh token or response was invalid.");
-    // Handle the failure scenario (e.g., log user out)
-  }
-  } else{
     setAuthUser(access_token, refresh_token);
   }
 };
@@ -150,7 +160,7 @@ if (user) {
 
 export const isAccessTokenExpired = (token) => {
   if (!token) {
-    return true; // Or handle this case as needed
+    return true;
   }
   try {
     const decoded = jwt_decode(token);

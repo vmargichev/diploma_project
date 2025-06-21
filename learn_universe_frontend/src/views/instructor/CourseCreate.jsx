@@ -115,7 +115,7 @@ function CourseCreate() {
                         id="courseTitle"
                         className="form-control"
                         type="number"
-                        placeholder="$20.99"
+                        placeholder="€1.99"
                       />
                     </div>
 

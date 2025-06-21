@@ -1,3 +1,4 @@
+import shortuuid
 from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
@@ -66,7 +67,7 @@ class Course(models.Model):
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet=ALPHABET)
     slug = models.SlugField(unique=True, null=True, blank=True)
-    date = models.DateTimeField(default=timezone.now)
+    date = models.DateField(default=timezone.now)
 
     def __str__(self):
         return self.title or "Untitled"
@@ -78,9 +79,6 @@ class Course(models.Model):
 
     def students(self):
         return EnrolledCourse.objects.filter(course=self)
-
-    def curriculum(self):
-        return self.variants.all()
 
     def lectures(self):
         return VariantItem.objects.filter(variant__course=self)
@@ -109,7 +107,7 @@ class VariantItem(models.Model):
     variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name="variant_items")
     title = models.CharField(max_length=1000)
     description = models.TextField(null=True, blank=True)
-    file = models.FileField(upload_to="variant-items")
+    file = models.FileField(upload_to="variant-items", blank=True, null=True)
     duration = models.DurationField(null=True, blank=True)
     content_duration = models.CharField(max_length=1000, null=True, blank=True)
     preview = models.BooleanField(default=False)
@@ -255,7 +253,7 @@ class EnrolledCourse(models.Model):
         return CompletedLesson.objects.filter(course=self.course, user=self.user)
 
     def curriculum(self):
-        return self.course.curriculum()
+        return self.course.variants
 
     def note(self):
         return Note.objects.filter(course=self.course, user=self.user)

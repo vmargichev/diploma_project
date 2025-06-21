@@ -12,8 +12,7 @@ function BaseFooter() {
               <h1>LearnUniverse</h1>
               <div className="mt-4">
                 <p>
-                  is feature-rich components and beautifully Bootstrap UIKit for
-                  developers, built with bootstrap responsive framework.
+                  Designed to support the next generation of software engineers. Our platform combines modern design and reliable technology to make learning programming easier.
                 </p>
                 {/* social media */}
                 <div className="fs-4 mt-4">
@@ -60,77 +59,12 @@ function BaseFooter() {
               </div>
             </div>
           </div>
-          <div className="offset-lg-1 col-lg-2 col-md-3 col-6">
-            <div className="mb-4">
-              {/* list */}
-              <h3 className="fw-bold mb-3">Company</h3>
-              <ul className="list-unstyled nav nav-footer flex-column nav-x-0">
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Careers
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="col-lg-2 col-md-3 col-6">
-            <div className="mb-4">
-              {/* list */}
-              <h3 className="fw-bold mb-3">Support</h3>
-              <ul className="list-unstyled nav nav-footer flex-column nav-x-0">
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Help and Support
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Become Instructor
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Get the app
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    FAQ’s
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="nav-link text-white">
-                    Tutorial
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
+
           <div className="col-lg-3 col-md-12">
             {/* contact info */}
             <div className="mb-4">
               <h3 className="fw-bold mb-3">Get in touch</h3>
-              <p>123 Main Street, U.S.A</p>
+
               <p className="mb-1">
                 Email:
                 <a href="#" className="text-white">
@@ -138,28 +72,8 @@ function BaseFooter() {
                   support@learnuniverse.com
                 </a>
               </p>
-              <p>
-                Phone:
-                <span className="text-dark fw-semibold">(000) 123 456 789</span>
-              </p>
-              <div className="d-flex">
-                <a href="#">
-                  <img
-                    src={logo}
-                    alt=""
-                    className="img-fluid"
-                    height="30"
-                  />
-                </a>
-                <a href="#" className="ms-2">
-                  <img
-                    src={logo}
-                    alt=""
-                    className="img-fluid"
-                    height="30"
-                  />
-                </a>
-              </div>
+
+
             </div>
           </div>
         </div>
@@ -170,7 +84,7 @@ function BaseFooter() {
               <div className="me-4">
                 <span>
                   ©<span id="copyright5"></span>
-                  LearnUniverse
+                  LearnUniverse2025
                 </span>
               </div>
               <div>

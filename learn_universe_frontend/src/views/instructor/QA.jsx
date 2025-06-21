@@ -139,7 +139,7 @@ function QA() {
                               className="text-decoration-none text-dark"
                             >
                               {" "}
-                              Destiny Franks
+                              Veselin Margichev
                             </a>
                             <br />
                             <span style={{ fontSize: "12px", color: "gray" }}>

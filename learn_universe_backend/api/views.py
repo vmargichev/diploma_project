@@ -13,12 +13,13 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from exceptiongroup import catch
 # from networkx.algorithms.bipartite.cluster import modes
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api import serializer as api_serializer
-from api.enums import PlatformStatus, TeacherStatus
-from api.models import Category, Course, Cart, Country, CartOrder, CartOrderItem, Coupon
+from api.enums import PlatformStatus, TeacherStatus, NotificationType
+from api.models import Category, Course, Cart, Country, CartOrder, CartOrderItem, Coupon, Notification, EnrolledCourse
 from api.serializer import PasswordResetConfirmSerializer
 from api.utils import generate_otp, get_paypal_access_token
 from userauths.models import User, Profile
@@ -104,7 +105,7 @@ class RegisterView(generics.CreateAPIView):
 class PasswordResetEmailVerifyAPIView(generics.CreateAPIView):
 
     permission_classes = [permissions.AllowAny]
-    serializer_class = api_serializer.UserSerializer # serializer_class = YourEmailOnlySerializer # For validating request.data['email']
+    serializer_class = api_serializer.UserSerializer
 
     def post(self, request, *args, **kwargs):
         email = self.kwargs['email']
@@ -112,28 +113,17 @@ class PasswordResetEmailVerifyAPIView(generics.CreateAPIView):
             return Response({"error": "Email address is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.get(email__iexact=email)  # Case-insensitive email lookup
+            user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
-            # Prevent email enumeration. Log this attempt for security monitoring if desired.
             return Response({"detail": "If an account with this email exists, a password reset link has been sent."},
                             status=status.HTTP_200_OK)
         old_otp = user.otp
         user.otp = generate_otp()
         user.save(update_fields=['otp'])
 
-        # Generate Django's password reset token
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)  # Time-sensitive token
 
-        # Construct link (use settings for base URL)
-        # Example: http://your-frontend.com/reset-password-confirm/<uidb64>/<token>/?otp=<otp_value>
-        # frontend_reset_url_base = getattr(settings, 'FRONTEND_PASSWORD_RESET_CONFIRM_URL_BASE',
-        #                                   'http://127.0.0.1:3000/reset-password-confirm/')
-        #
-        # if not frontend_reset_url_base.endswith('/'):
-        #     frontend_reset_url_base += '/'
-        #
-        # link = f"{frontend_reset_url_base}{uidb64}/{token}/?otp={user.otp}"
         link = f"http://localhost:5173/create-new-pass/?otp={user.otp}&uidb64={uidb64}&refresh_token={token}"
 
         context = {
@@ -149,8 +139,6 @@ class PasswordResetEmailVerifyAPIView(generics.CreateAPIView):
         try:
             msg.send()
         except Exception as e:
-            # logger.error(f"Failed to send password reset email to {user.email}: {e}")
-            # Consider if OTP should be reverted or if user should be informed of send failure
             return Response({"error": "Could not send password reset email. Please try again later."},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -181,10 +169,20 @@ class CourseListAPIView(generics.ListAPIView):
 class CourseDetailAPIView(generics.RetrieveAPIView):
     serializer_class = api_serializer.CourseSerializer
     permission_classes = [AllowAny]
-    queryset = Course.objects.filter(platform_status=PlatformStatus.PUBLISHED, teacher_course_status=TeacherStatus.PUBLISHED)
+    queryset = Course.objects.filter(
+        platform_status=PlatformStatus.PUBLISHED,
+        teacher_course_status=TeacherStatus.PUBLISHED
+    ).select_related('category', 'teacher')
+    lookup_field = 'slug'
 
     def get_object(self):
-        return Course.objects.get(slug=self.kwargs["slug"], platform_status=PlatformStatus.PUBLISHED, teacher_course_status=TeacherStatus.PUBLISHED)
+        try:
+            return get_object_or_404(
+                self.get_queryset(),
+                slug=self.kwargs['slug']
+            )
+        except Exception as e:
+            raise NotFound(detail="Course not found") from e
 
 class CartAPIView(generics.CreateAPIView):
     queryset = Cart.objects.all()
@@ -220,13 +218,25 @@ class CartAPIView(generics.CreateAPIView):
         tax_fee = price * (country_obj.tax_rate / Decimal("100"))
         total = price + tax_fee
 
-        cart = Cart.objects.create(
-            course=course,
-            user=user,
-            price=price,
-            tax_fee=tax_fee,
-            total=total,
-            country=country_obj
+        cart_id = request.data.get("cart_id")
+        if not cart_id or cart_id == "undefined" or cart_id == "Null" or cart_id == "":
+            cart = Cart.objects.create(
+                course=course,
+                user=user,
+                price=price,
+                tax_fee=tax_fee,
+                total=total,
+                country=country_obj,
+            )
+        else:
+            cart = Cart.objects.create(
+                course=course,
+                user=user,
+                price=price,
+                tax_fee=tax_fee,
+                total=total,
+                country=country_obj,
+                cart_id=cart_id,
         )
 
         serializer = self.get_serializer(cart)
@@ -250,7 +260,10 @@ class CartItemDeleteAPIView(generics.DestroyAPIView):
         cart_id = self.kwargs["cart_id"]
         course = self.kwargs["course"]
 
-        return Cart.objects.filter(cart_id=cart_id, course=course).first()
+        try:
+            return Cart.objects.get(cart_id=cart_id, course_id=course)
+        except Cart.DoesNotExist:
+            raise NotFound("Cart item not found.")
 
 # class CartStatAPIView(generics.RetrieveAPIView):
 #     queryset = Cart.objects.all()
@@ -309,7 +322,7 @@ class CartOrderCreateAPIView(generics.CreateAPIView):
             return Response({"detail": "user_id and cart_id are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.get(uuid=user_id)
+            user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -355,7 +368,7 @@ class CartOrderCreateAPIView(generics.CreateAPIView):
             order.total = total_total
             order.save()
 
-        return Response({"message": "Order created successfully."}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Order created successfully.", "order_oid": order.oid }, status=status.HTTP_201_CREATED)
 
 class OrderCheckoutAPIView(generics.RetrieveAPIView):
     queryset = CartOrder.objects.all()
@@ -453,6 +466,7 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
 
         try:
             order = CartOrder.objects.get(oid=order_id)
+            order_items = CartOrderItem.objects.filter(order=order)
         except CartOrder.DoesNotExist:
             return Response({"message": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -479,6 +493,21 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
                     order.save()
                     # You can also process order items here if needed
 
+                    Notification.objects.create(user=order.student, order=order,
+                                                type=NotificationType.COURSE_ENROLLMENT_COMPLETED)
+
+                    for o in order_items:
+                        Notification.objects.create(teacher=o.teachers,
+                                                    order=order,
+                                                    order_item=o,
+                                                    type=NotificationType.NEW_ORDER)
+                        EnrolledCourse.objects.create(
+                            course=o.course,
+                            user=order.student,
+                            teacher=o.teacher,
+                            order_item=o,
+                        )
+
                     return Response({"message": "Payment successful and verified with PayPal"}, status=status.HTTP_200_OK)
                 else:
                     return Response({"message": f"PayPal order status is {order_data.get('status')}, not completed"}, status=status.HTTP_400_BAD_REQUEST)
@@ -504,6 +533,20 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
 
                         order.save()
 
+                        Notification.objects.create(user=order.student, order=order, type=NotificationType.COURSE_ENROLLMENT_COMPLETED)
+
+                        for o in order_items:
+                            Notification.objects.create(teacher=o.teachers,
+                                                        order=order,
+                                                        order_item=o,
+                                                        type=NotificationType.NEW_ORDER)
+                            EnrolledCourse.objects.create(
+                                course=o.course,
+                                user=order.student,
+                                teacher=o.teacher,
+                                order_item=o,
+                            )
+
                     return Response({"message": "Payment verified and order updated"}, status=status.HTTP_200_OK)
 
                 else:
@@ -514,3 +557,11 @@ class PaymentSuccessAPIView(generics.CreateAPIView):
             else:
 
                 return Response({"message": "No payment session_id provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+class SearchCourseAPIView(generics.ListAPIView):
+    serializer_class = api_serializer.CourseSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        query = self.request.GET.get('query')
+        return Course.objects.filter(title__icontains=query, platform_status=PlatformStatus.PUBLISHED, teacher_course_status=TeacherStatus.PUBLISHED)

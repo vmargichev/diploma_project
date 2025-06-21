@@ -15,7 +15,7 @@ class User(AbstractUser):
     uuid = models.UUIDField(default=uuid.uuid4,editable=True , unique=True) #TODO
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"] ##TODO
+    REQUIRED_FIELDS = ["username"]
 
     def save(self, *args, **kwargs):
         if not self.username:

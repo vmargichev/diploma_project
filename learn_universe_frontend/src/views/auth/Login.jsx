@@ -12,7 +12,7 @@ function Login() {
     const [isLoading, setIsLoading] = useState(false);
 
     const navigate = useNavigate();
-    const FORM_MARGIN_TOP = "150px"; // Constant extracted for better maintainability
+    const FORM_MARGIN_TOP = "150px";
 
     const renderButton = () => (
         <button disabled={isLoading} type="submit" className="btn btn-primary">
