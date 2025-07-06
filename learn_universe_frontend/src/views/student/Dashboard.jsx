@@ -1,13 +1,58 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import { Link } from 'react-router-dom'
 
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
+import UserData from "../plugin/UserData.js";
+import {apiInstance} from "../../utils/axios.js";
+import moment from "moment";
 
 
 function Dashboard() {
+
+    const [courses, setCourses] = useState([]);
+    const [stats, setStats] = useState([]);
+    const [fetching, setFetching] = useState(true);
+    const [search, setSearch] = useState("");
+    const user = UserData;
+    const fetchData = async () => {
+        try{
+            const res = await apiInstance.get(`student/summary/${user.user_id}/`)
+            setStats(res.data[0])
+
+        } catch (error) {
+            console.log("Error: ", error.data.message)
+        }
+        try{
+            const res = await apiInstance.get(`student/course-list/${user.user_id}/`)
+            setCourses(res.data)
+
+        } catch (error) {
+            console.log("Error: ", error.data.message)
+        }
+
+    }
+
+    const handleSearch = (event) => {
+            const query = event.target.value.toLowerCase();
+
+        if ( query === "") {
+            fetchData();
+        } else {
+            const filtered = courses.filter((course) => {
+                return course.course.title.toLowerCase().includes(query)
+            })
+            setCourses(filtered);
+        }
+        }
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+
     return (
         <>
             <BaseHeader />
@@ -31,7 +76,7 @@ function Dashboard() {
                                         </span>
                                         <div className="ms-4">
                                             <div className="d-flex">
-                                                <h5 className="purecounter mb-0 fw-bold" >0</h5>
+                                                <h5 className="purecounter mb-0 fw-bold" >{stats.total_courses || 0}</h5>
                                             </div>
                                             <p className="mb-0 h6 fw-light">Total Courses</p>
                                         </div>
@@ -45,7 +90,7 @@ function Dashboard() {
                                         </span>
                                         <div className="ms-4">
                                             <div className="d-flex">
-                                                <h5 className="purecounter mb-0 fw-bold" > 0</h5>
+                                                <h5 className="purecounter mb-0 fw-bold" > {stats.completed_lessons || 0 }</h5>
                                             </div>
                                             <p className="mb-0 h6 fw-light">Complete lessons</p>
                                         </div>
@@ -59,7 +104,7 @@ function Dashboard() {
                                         </span>
                                         <div className="ms-4">
                                             <div className="d-flex">
-                                                <h5 className="purecounter mb-0 fw-bold" > 0</h5>
+                                                <h5 className="purecounter mb-0 fw-bold" > {stats.achieved_certificates || 0 }</h5>
                                             </div>
                                             <p className="mb-0 h6 fw-light">Achieved Certificates</p>
                                         </div>
@@ -81,6 +126,7 @@ function Dashboard() {
                                                 type="search"
                                                 className="form-control"
                                                 placeholder="Search Your Courses"
+                                                onChange={handleSearch}
                                             />
                                         </div>
                                     </form>
@@ -98,45 +144,64 @@ function Dashboard() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
+                                        {courses?.map((course, index) => (
+                                            <tr key={course.id}>
                                                 <td>
                                                     <div className="d-flex align-items-center">
                                                         <div>
-                                                            <a href="#">
+                                                            <Link to={`/student/courses/${course.enrollment_id}`} className="text-decoration-none">
                                                                 <img
-                                                                    src="https://geeksui.codescandy.com/geeks/assets/images/course/course-wordpress.jpg"
-                                                                    alt="course"
+                                                                    src={course.course.image}
+                                                                    alt={course.course.title}
                                                                     className="rounded img-4by3-lg"
-                                                                    style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }}
+                                                                    style={{
+                                                                        width: "100px",
+                                                                        height: "70px",
+                                                                        borderRadius: "50%",
+                                                                        objectFit: "cover"
+                                                                    }}
                                                                 />
-                                                            </a>
+                                                            </Link>
                                                         </div>
                                                         <div className="ms-3">
                                                             <h4 className="mb-1 h5">
-                                                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                                                    Create a Website with WordPress
+                                                                <a href="#"
+                                                                   className="text-inherit text-decoration-none text-dark">
+                                                                    {course.course.title}
                                                                 </a>
                                                             </h4>
                                                             <ul className="list-inline fs-6 mb-0">
                                                                 <li className="list-inline-item">
-                                                                    <i className='bi bi-clock-history'></i>
-                                                                    <span className='ms-1'>1hr 30 Mins</span>
+                                                                    <i className='fas fa-user'></i>
+                                                                    <span className='ms-1'>{course.course.language}</span>
                                                                 </li>
                                                                 <li className="list-inline-item">
                                                                     <i className='bi bi-reception-4'></i>
-                                                                    <span className='ms-1'>Beginner</span>
+                                                                    <span className='ms-1'>{course.course.level}</span>
                                                                 </li>
                                                             </ul>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td><p className='mt-3'>7/11/2025</p></td>
-                                                <td><p className='mt-3'>15</p></td>
-                                                <td><p className='mt-3'>7</p></td>
+                                                <td><p className='mt-3'>{moment(course.date).format("DD/MM/YY")}</p></td>
+                                                <td><p className='mt-3'>{course.course.lectures.length}</p></td>
+                                                <td><p className='mt-3'>{course.completed_lesson.length}</p></td>
                                                 <td>
-                                                    <button className='btn btn-primary btn-sm mt-3'>Continue Course <i className='fas fa-arrow-right'></i></button>
+                                                    <Link to={`/student/courses/${course.enrollment_id}`} className="text-decoration-none">
+                                                    <button className='btn btn-primary btn-sm mt-3'>Continue Course <i
+                                                        className='fas fa-arrow-right'></i></button>
+                                                    </Link>
                                                 </td>
                                             </tr>
+                                        ))}
+                                        <tr>
+                                            <td>
+                                               {courses?.length < 1 &&
+                                        <p className="mt-4 p-4">No courses found</p>
+                                        }
+                                            </td>
+                                        </tr>
+
                                         </tbody>
                                     </table>
                                 </div>
@@ -146,7 +211,7 @@ function Dashboard() {
                 </div>
             </section>
 
-            <BaseFooter />
+            <BaseFooter/>
         </>
     )
 }

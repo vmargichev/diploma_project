@@ -26,7 +26,7 @@ function CourseDetail() {
 
 
     useEffect(() => {
-
+        console.log(course)
         const fetchCourse = async () => {
             try {
                 const res = await apiInstance.get(`course/course-detail/${slug}/`);

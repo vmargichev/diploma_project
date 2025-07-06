@@ -1,8 +1,10 @@
+
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import Token
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -10,6 +12,8 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from . import models as api_models
 
 from userauths.models import Profile, User
+from .models import Category, Teacher
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -54,6 +58,8 @@ class UserSerializer(serializers.ModelSerializer):
         exclude = ['password']
 
 class ProfileSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Profile
@@ -130,6 +136,7 @@ class VariantItemSerializer(serializers.ModelSerializer):
 
 class VariantSerializer(serializers.ModelSerializer):
     variant_items = VariantItemSerializer(many=True)
+    items = VariantItemSerializer(many=True)
 
     class Meta:
         fields = '__all__'
@@ -152,21 +159,6 @@ class Question_AnswerSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = api_models.Question_Answer
 
-
-class CartOrderItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = api_models.CartOrderItem
-
-
-class CartOrderSerializer(serializers.ModelSerializer):
-    order_item = CartOrderItemSerializer(many=True)
-
-    class Meta:
-        fields = '__all__'
-        model = api_models.CartOrder
-
-
 class CertificateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
@@ -185,14 +177,6 @@ class NoteSerializer(serializers.ModelSerializer):
         model = api_models.Note
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(many=False)
-
-    class Meta:
-        fields = '__all__'
-        model = api_models.Review
-
-
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
@@ -204,18 +188,24 @@ class CouponSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = api_models.Coupon
 
-
-class WishlistSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = api_models.Wishlist
-
-
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = api_models.Country
 
+class MinimalCourseSerializer(serializers.ModelSerializer):
+    lectures = VariantItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = api_models.Course
+        fields = ["id", "title", "slug", "image", "teacher", "average_rating", "level", "language", "lectures"]
+
+class ReviewSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(many=False)
+    course = MinimalCourseSerializer(read_only=True)
+    class Meta:
+        fields = '__all__'
+        model = api_models.Review
 
 class EnrolledCourseSerializer(serializers.ModelSerializer):
     lectures = VariantItemSerializer(many=True, read_only=True)
@@ -223,7 +213,8 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
     curriculum = VariantSerializer(many=True, read_only=True)
     note = NoteSerializer(many=True, read_only=True)
     question_answer = Question_AnswerSerializer(many=True, read_only=True)
-    review = ReviewSerializer(many=False, read_only=True)
+    course = MinimalCourseSerializer(read_only=True)
+    review = ReviewSerializer(many=False, )
 
     class Meta:
         fields = '__all__'
@@ -234,15 +225,24 @@ class CourseSerializer(serializers.ModelSerializer):
     variants = VariantSerializer(many=True, required=False, read_only=True, )
     lectures = VariantItemSerializer(many=True, required=False, read_only=True, )
     reviews = ReviewSerializer(many=True, read_only=True, required=False)
-    category = CategorySerializer(read_only=True, required=False)
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
+    teacher = TeacherSerializer(required=False, allow_null=True)
     students = EnrolledCourseSerializer(many=True, read_only=True, required=False)
-    teacher = TeacherSerializer(read_only=True, required=False)
+
 
     class Meta:
         fields = ["id", "category", "teacher", "file", "image", "title", "description", "price", "language", "level",
                   "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students",
                   "variants", "lectures", "average_rating", "rating_count", "reviews", ]
         model = api_models.Course
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    course = CourseSerializer(read_only=True)
+
+    class Meta:
+        fields = '__all__'
+        model = api_models.Wishlist
 
 class CartSerializer(serializers.ModelSerializer):
     course = CourseSerializer(read_only=True)
@@ -255,6 +255,20 @@ class StudentSummarySerializer(serializers.Serializer):
     total_courses = serializers.IntegerField(default=0)
     completed_lessons = serializers.IntegerField(default=0)
     achieved_certificates = serializers.IntegerField(default=0)
+
+class CartOrderItemSerializer(serializers.ModelSerializer):
+    course=CourseSerializer(read_only=True)
+    class Meta:
+        fields = '__all__'
+        model = api_models.CartOrderItem
+
+
+class CartOrderSerializer(serializers.ModelSerializer):
+    order_item = CartOrderItemSerializer(many=True)
+
+    class Meta:
+        fields = '__all__'
+        model = api_models.CartOrder
 
 
 class TeacherSummarySerializer(serializers.Serializer):

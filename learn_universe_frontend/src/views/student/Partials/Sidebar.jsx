@@ -31,12 +31,6 @@ function Sidebar() {
                                     <i className="bi bi-grid-fill"></i>Dashboard
                                 </Link>
                             </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/student/courses/`}>
-                                    {" "}
-                                    <i className="fas fa-shopping-cart"></i>My Courses
-                                </Link>
-                            </li>
 
                             <li className="nav-item">
                                 <Link className="nav-link" to={`/student/wishlist/`}>
@@ -48,29 +42,6 @@ function Sidebar() {
                                 <Link className="nav-link" to={`/student/question-answer/`}>
                                     {" "}
                                     <i className="fas fa-envelope"></i> Q/A{" "}
-                                </Link>
-                            </li>
-                        </ul>
-
-                        {/* Navbar header */}
-                        <span className="navbar-header mb-3">Account Settings</span>
-                        <ul className="list-unstyled ms-n2 mb-0">
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/student/profile/`}>
-                                    {" "}
-                                    <i className="fas fa-edit"></i> Edit Profile
-                                </Link>
-                            </li>
-                            <li className="nav-item ">
-                                <Link className="nav-link" to={`/student/change-password/`}>
-                                    {" "}
-                                    <i className="fas fa-lock"></i> Change Password
-                                </Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/login/`}>
-                                    {" "}
-                                    <i className="fas fa-sign-out-alt"></i> Sign Out
                                 </Link>
                             </li>
                         </ul>

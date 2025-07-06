@@ -4,6 +4,7 @@ class Language(models.TextChoices):
     ENGLISH = "English", "English"
     SPANISH = "Spanish", "Spanish"
     FRENCH = "French", "French"
+    BULGARIAN = "Bulgarian", "Bulgarian"
 
 class Level(models.TextChoices):
     BEGINNER = "Beginner", "Beginner"

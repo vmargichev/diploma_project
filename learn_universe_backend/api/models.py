@@ -1,7 +1,14 @@
+import tempfile
+from datetime import timedelta
+
 import shortuuid
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.timezone import now
+
 from api.enums import Language, TeacherStatus, PlatformStatus, Level, PaymentStatus, Rating, NotificationType
 from userauths.models import User, Profile
 from shortuuid.django_fields import ShortUUIDField
@@ -101,6 +108,9 @@ class Variant(models.Model):
 
     def __str__(self):
         return self.title
+
+    def items(self):
+        return VariantItem.objects.filter(variant=self)
 
 
 class VariantItem(models.Model):

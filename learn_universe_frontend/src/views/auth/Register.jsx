@@ -11,6 +11,7 @@ function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
+  const [requestTeacher, setRequestTeacher] = useState(false)
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -48,31 +49,29 @@ function Register() {
                     </Link>
                   </span>
                 </div>
-                {/* Form */}
                 <form className="needs-validation" noValidate="" onSubmit={(e) => handleSubmit(e)}>
-                  {/* Username */}
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">Full Name</label>
                     <input
-                      type="text"
-                      id="full_name"
-                      className="form-control"
-                      name="full_name"
-                      placeholder="John Doe"
-                      required=""
-                      onChange={(e) => setFullName(e.target.value)}
+                        type="text"
+                        id="full_name"
+                        className="form-control"
+                        name="full_name"
+                        placeholder="John Doe"
+                        required=""
+                        onChange={(e) => setFullName(e.target.value)}
                     />
                   </div>
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">Email Address</label>
                     <input
-                      type="email"
-                      id="email"
-                      className="form-control"
-                      name="email"
-                      placeholder="johndoe@gmail.com"
-                      required=""
-                      onChange={(e) => setEmail(e.target.value)}
+                        type="email"
+                        id="email"
+                        className="form-control"
+                        name="email"
+                        placeholder="johndoe@gmail.com"
+                        required=""
+                        onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 
@@ -80,27 +79,51 @@ function Register() {
                   <div className="mb-3">
                     <label htmlFor="password" className="form-label">Password</label>
                     <input
-                      type="password"
-                      id="password"
-                      className="form-control"
-                      name="password"
-                      placeholder="**************"
-                      required=""
-                      onChange={(e) => setPassword(e.target.value)}
+                        type="password"
+                        id="password"
+                        className="form-control"
+                        name="password"
+                        placeholder="**************"
+                        required=""
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
                   <div className="mb-3">
                     <label htmlFor="password2" className="form-label">Confirm Password</label>
                     <input
-                      type="password"
-                      id="password2"
-                      className="form-control"
-                      name="password"
-                      placeholder="**************"
-                      required=""
-                      onChange={(e) => setPassword2(e.target.value)}
+                        type="password"
+                        id="password2"
+                        className="form-control"
+                        name="password"
+                        placeholder="**************"
+                        required=""
+                        onChange={(e) => setPassword2(e.target.value)}
                     />
                   </div>
+                  <div className="mb-3 form-check">
+                    <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="request_teacher"
+                        name="request_teacher"
+                        onChange={(e) => {
+                          if (!requestTeacher) {
+                            setRequestTeacher(e.target.value)}
+                          else {
+                            setRequestTeacher(false)}
+                          }
+                        }
+                    />
+                    <label className="form-check-label" htmlFor="is_teacher">
+                      Register as instructor/teacher
+                    </label>
+                    {requestTeacher && (
+                    <div className="alert alert-info mt-2">
+                      Teacher accounts require admin approval before you can create courses.
+                    </div>
+                  )}
+                  </div>
+
                   <div>
                     <div className="d-grid">
 
@@ -116,7 +139,7 @@ function Register() {
         </div>
       </section>
 
-      <BaseFooter />
+      <BaseFooter/>
     </>
   )
 }

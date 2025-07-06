@@ -1,6 +1,5 @@
 import { useAuthStore } from "../store/auths.js";
 import { apiInstance } from "./axios.js";
-import axios from "axios";
 import jwt_decode from "jwt-decode";
 import Cookie from "js-cookie";
 import Swal from "sweetalert2";
@@ -9,7 +8,7 @@ export const getRefreshToken = async () => {
   const refreshToken = Cookie.get("refresh_token");
   if (!refreshToken) {
     console.warn("No refresh token found.");
-    return null; // Or throw an error if a refresh token is expected
+    return null;
   }
 
   try {

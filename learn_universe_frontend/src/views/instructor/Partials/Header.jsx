@@ -1,6 +1,31 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
+import {useNavigate} from 'react-router-dom'
+import {apiInstance} from "../../../utils/axios.js";
+import UserData from "../../plugin/UserData.js";
+import Cookies from "js-cookie";
 
 function Header() {
+
+    const navigate = useNavigate();
+
+    const [user, setUser] = useState(null);
+
+    const fetchUser = () => {
+        apiInstance.get(`user/get-user/${UserData?.user_id}/`, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${Cookies.get("access_token")}`
+            }
+          }).then((res) => {
+          setUser(res.data)
+        })
+
+    }
+
+    useEffect(() => {
+        fetchUser()
+    }, []);
+
     return (
         <div className="row align-items-center">
             <div className="col-xl-12 col-lg-12 col-md-12 col-12">
@@ -8,18 +33,16 @@ function Header() {
                     <div className="d-flex align-items-end justify-content-between">
                         <div className="d-flex align-items-center">
                             <div className="me-2 position-relative d-flex justify-content-end align-items-end mt-n5">
-                                <img src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-4.jpg" className="avatar-xl rounded-circle border border-4 border-white" alt="avatar" style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
+                                <img src={user?.image} className="avatar-xl rounded-circle border border-4 border-white" alt="avatar" style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
                             </div>
                             <div className="lh-1">
-                                <h2 className="mb-0"> Destiny Franks</h2>
-                                <p className="mb-0 d-block">@desphixs</p>
+                                <h2 className="mb-0"> {user?.full_name}</h2>
+                                <p className="mb-0 d-block">@{user?.user?.username}</p>
                             </div>
                         </div>
                         <div>
                             <div className="d-flex">
-                                <a href="profile-edit.html" className="btn btn-primary btn-sm d-none d-md-block ms-2" > Create New Course <i className='fas fa-plus'></i></a>
-                                <a href="profile-edit.html" className="btn btn-success btn-sm d-none d-md-block ms-2" > Setting <i className='fas fa-gear'></i></a>
-                                <a href="profile-edit.html" className="btn btn-danger btn-sm d-none d-md-block ms-2" > Contact Support <i className='fas fa-phone'></i></a>
+                                <a onClick={() => navigate('/instructor/create-course/')} className="btn btn-primary btn-sm d-none d-md-block ms-2" > Create New Course <i className='fas fa-plus'></i></a>
                             </div>
                         </div>
                     </div>

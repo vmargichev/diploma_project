@@ -16,9 +16,6 @@ function Sidebar() {
                                 <Link className="nav-link " to={`/instructor/dashboard/`}> <i className='bi bi-grid-fill me-2'></i> Dashboard</Link>
                             </li>
                             <li className="nav-item">
-                                <Link className="nav-link " to={`/instructor/courses/`}> <i className='fas fa-shopping-cart me-2'></i>My Courses</Link>
-                            </li>
-                            <li className="nav-item">
                                 <Link className="nav-link " to={`/instructor/create-course/`}> <i className='fas fa-plus me-2'></i>Create Course</Link>
                             </li>
                             <li className="nav-item">
@@ -27,33 +24,18 @@ function Sidebar() {
                             <li className="nav-item">
                                 <Link className="nav-link " to={`/instructor/students/`}> <i className='fas fa-graduation-cap me-2'></i>Students</Link>
                             </li>
-                            <li className="nav-item">
-                                <Link className="nav-link " to={`/instructor/earning/`}> <i className='fas fa-dollar-sign me-2'></i>Earning</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/instructor/quiz/`}><i className='fas fa-question-circle me-2'></i>Quiz </Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/instructor/orders/`}>  <i className='fas fa-shopping-cart me-2'></i> Orders </Link>
-                            </li>
+                            {/*<li className="nav-item">*/}
+                            {/*    <Link className="nav-link " to={`/instructor/earning/`}> <i className='fas fa-dollar-sign me-2'></i>Earning</Link>*/}
+                            {/*</li>*/}
+                            {/*<li className="nav-item">*/}
+                            {/*    <Link className="nav-link" to={`/instructor/orders/`}>  <i className='fas fa-shopping-cart me-2'></i> Orders </Link>*/}
+                            {/*</li>*/}
                             <li className="nav-item">
                                 <Link className="nav-link" to={`/instructor/question-answer/`}>  <i className='fas fa-envelope me-2'></i> Q/A </Link>
                             </li>
                         </ul>
 
-                        {/* Navbar header */}
-                        <span className="navbar-header mb-3">Account Settings</span>
-                        <ul className="list-unstyled ms-n2 mb-0">
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/instructor/profile/`}> <i className='fas fa-edit'></i> Edit Profile</Link>
-                            </li>
-                            <li className="nav-item ">
-                                <Link className="nav-link" to={`/instructor/change-password/`}> <i className='fas fa-lock'></i> Change Password</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link className="nav-link" to={`/login/`}> <i className='fas fa-sign-out-alt'></i> Sign Out</Link>
-                            </li>
-                        </ul>
+
                     </div>
                 </div>
             </nav>

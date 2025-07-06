@@ -16,7 +16,7 @@ function Index() {
 
   const [courses, setCourses] = useState([]);
   const country = useCurrentAddress().country;
-  const userId = UserData.user_id;
+  const userId = UserData?.user_id;
   const cartId = localStorage.getItem("cartId");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -26,6 +26,7 @@ function Index() {
   const fetchCourse = async () => {
     try {
       const response = await apiInstance.get('course/course-list');
+      console.log(response.data)
       setCourses(response.data);
       setIsLoading(false);
     } catch (e) {
@@ -33,6 +34,22 @@ function Index() {
       setIsLoading(false);
     }
   };
+  const handleAddDeleteFromWishlist = (courseId) => {
+      const formdata = new FormData();
+      formdata.append("user_id", userId)
+        formdata.append("course_id", courseId)
+
+        apiInstance.post(`student/wishlist/${userId}/`, formdata).then((res)=> {
+          Swal.fire({
+            toast: true,
+            position: "top",
+      icon: "success",
+      title: res.data.message,
+      showConfirmButton: false,
+            timer: 1500
+    });
+        })
+    };
 
   const addToCart = async (courseId, userId, country, cartId) => {
       if (!isLoggedIn()) {
@@ -111,10 +128,20 @@ function Index() {
 
   useEffect(() => {
     fetchCourse();
+
+
   }, []);
 
-  console.log(courses)
-
+  const itemsPerPage = 4
+  const [currentPage, setCurrentPage] = useState(1);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = courses.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(courses.length / itemsPerPage)
+  const pageNumbers = Array.from(
+      {length: totalPages},
+      (_, index) => index + 1
+  )
     return (
       <>
         <BaseHeader />
@@ -133,7 +160,9 @@ function Index() {
                   </h1>
                   {/* para */}
                   <p className="pe-lg-10 mb-5">
-                    Whether you're just starting out or looking to advance, our platform helps you take the next step in your programming journey.
+                    Whether you're just starting out or looking to advance, our
+                    platform helps you take the next step in your programming
+                    journey.
                   </p>
                   {/* btn */}
                   <a
@@ -141,12 +170,6 @@ function Index() {
                     className="btn btn-primary fs-4 text-inherit ms-3"
                   >
                     Join Free Now <i className="fas fa-plus"></i>
-                  </a>
-                  <a
-                    href="https://www.youtube.com/watch?v=Nfzi7034Kbg"
-                    className="btn btn-outline-success fs-4 text-inherit ms-3"
-                  >
-                    Watch Demo <i className="fas fa-video"></i>
                   </a>
                 </div>
               </div>
@@ -165,65 +188,6 @@ function Index() {
           </div>
         </section>
 
-        {/*<section className="pb-8">*/}
-        {/*    <div className="container mb-lg-8">*/}
-        {/*        /!* row *!/*/}
-        {/*        <div className="row mb-5">*/}
-        {/*            <div className="col-md-6 col-lg-3 border-top-md border-top pb-4  border-end-md">*/}
-        {/*                /!* text *!/*/}
-        {/*                <div className="py-7 text-center">*/}
-        {/*                    <div className="mb-3">*/}
-        {/*                        <i className="fe fe-award fs-2 text-info" />*/}
-        {/*                    </div>*/}
-        {/*                    <div className="lh-1">*/}
-        {/*                        <h2 className="mb-1">316,000+</h2>*/}
-        {/*                        <span>Qualified Instructor</span>*/}
-        {/*                    </div>*/}
-        {/*                </div>*/}
-        {/*            </div>*/}
-        {/*            <div className="col-md-6 col-lg-3 border-top-md border-top border-end-lg">*/}
-        {/*                /!* icon *!/*/}
-        {/*                <div className="py-7 text-center">*/}
-        {/*                    <div className="mb-3">*/}
-        {/*                        <i className="fe fe-users fs-2 text-warning" />*/}
-        {/*                    </div>*/}
-        {/*                    /!* text *!/*/}
-        {/*                    <div className="lh-1">*/}
-        {/*                        <h2 className="mb-1">1.8 Billion+</h2>*/}
-        {/*                        <span>Course enrolments</span>*/}
-        {/*                    </div>*/}
-        {/*                </div>*/}
-        {/*            </div>*/}
-        {/*            <div className="col-md-6 col-lg-3 border-top-lg border-top border-end-md">*/}
-        {/*                /!* icon *!/*/}
-        {/*                <div className="py-7 text-center">*/}
-        {/*                    <div className="mb-3">*/}
-        {/*                        <i className="fe fe-tv fs-2 text-primary" />*/}
-        {/*                    </div>*/}
-        {/*                    /!* text *!/*/}
-        {/*                    <div className="lh-1">*/}
-        {/*                        <h2 className="mb-1">41,000+</h2>*/}
-        {/*                        <span>Courses in 42 languages</span>*/}
-        {/*                    </div>*/}
-        {/*                </div>*/}
-        {/*            </div>*/}
-        {/*            <div className="col-md-6 col-lg-3 border-top-lg border-top">*/}
-        {/*                /!* icon *!/*/}
-        {/*                <div className="py-7 text-center">*/}
-        {/*                    <div className="mb-3">*/}
-        {/*                        <i className="fe fe-film fs-2 text-success" />*/}
-        {/*                    </div>*/}
-        {/*                    /!* text *!/*/}
-        {/*                    <div className="lh-1">*/}
-        {/*                        <h2 className="mb-1">179,000+</h2>*/}
-        {/*                        <span>Online Videos</span>*/}
-        {/*                    </div>*/}
-        {/*                </div>*/}
-        {/*            </div>*/}
-        {/*        </div>*/}
-        {/*    </div>*/}
-        {/*</section>*/}
-
         <section className="mb-5">
           <div className="container mb-lg-8 ">
             <div className="row mb-5 mt-3">
@@ -241,7 +205,7 @@ function Index() {
             <div className="row">
               <div className="col-md-12">
                 <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-                  {courses?.map((c, index) => (
+                  {currentItems?.map((c, index) => (
                     <div className="col" key={c.id}>
                       {/* Card */}
                       <div className="card card-hover">
@@ -262,10 +226,12 @@ function Index() {
                           <div className="d-flex justify-content-between align-items-center mb-3">
                             <div>
                               <span className="badge bg-info">{c.level}</span>
-                              <span className="badge bg-info ms-2">{c.language}</span>
+                              <span className="badge bg-info ms-2">
+                                {c.language}
+                              </span>
                             </div>
 
-                            <a href="#" className="fs-5">
+                            <a onClick={() => handleAddDeleteFromWishlist(c.id)} className="fs-5">
                               <i className="fas fa-heart text-danger align-middle" />
                             </a>
                           </div>
@@ -277,18 +243,25 @@ function Index() {
                               {c.title}
                             </Link>
                           </h4>
-                          <small>By: {c.teacher.full_name}</small> <br />
+                          <small>By: {c?.teacher?.full_name}</small> <br />
                           <small>{c.students?.length} Students</small> <br />
                           <div className="lh-1 mt-3 d-flex">
                             <span className="align-text-top">
                               <span className="fs-6">
-                                <Rater total={5} rating={c.average_rating || 0} />
+                                <Rater
+                                  total={5}
+                                  rating={c.average_rating || 0}
+                                />
 
                                 {/*<StarRatings rating={c.average_rating || 0} numberOfStars={5} starDimension={"15px"} />*/}
                               </span>
                             </span>
-                            <span className="text-warning ms-2">{c.average_rating || 0}</span>
-                            <span className="fs-6 ms-2">({c.reviews?.length} Reviews)</span>
+                            <span className="text-warning ms-2">
+                              {c.average_rating || 0}
+                            </span>
+                            <span className="fs-6 ms-2">
+                              ({c.reviews?.length} Reviews)
+                            </span>
                           </div>
                         </div>
                         {/* Card Footer */}
@@ -300,11 +273,9 @@ function Index() {
                             <div className="col-auto">
                               <button
                                 type="button"
-                                onClick={() => addToCart(
-                                    c.id,
-                                    userId,
-                                    country || "Bulgaria",
-                                )}
+                                onClick={() =>
+                                  addToCart(c.id, userId, country || "Bulgaria")
+                                }
                                 className="text-inherit text-decoration-none btn btn-primary me-2"
                               >
                                 <i className="fas fa-shopping-cart text-primary text-white" />
@@ -322,34 +293,35 @@ function Index() {
                       </div>
                     </div>
                   ))}
-
                 </div>
                 <nav aria-label="Page navigation example">
                   <ul className="pagination justify-content-center">
-                    <li className="page-item disabled">
-                      <a className="page-link" href="#" tabIndex="-1">
+                    <li
+                      className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                    >
+                      <button
+                        className="page-link"
+                        href="#"
+                        tabIndex="-1"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                      >
                         Previous
-                      </a>
+                      </button>
                     </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">
-                        1
-                      </a>
-                    </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">
-                        2
-                      </a>
-                    </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">
-                        3
-                      </a>
-                    </li>
-                    <li className="page-item">
-                      <a className="page-link" href="#">
+                    {pageNumbers.map((number) => (
+                      <li className="page-item">
+                        <button className="page-link" href="#" onClick={() => setCurrentPage(number)}>
+                          {number}
+                        </button>
+                      </li>
+                    ))}
+
+                    <li
+                      className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                    >
+                      <button className="page-link" href="#" onClick={() => setCurrentPage(currentPage + 1)}>
                         Next
-                      </a>
+                      </button>
                     </li>
                   </ul>
                 </nav>

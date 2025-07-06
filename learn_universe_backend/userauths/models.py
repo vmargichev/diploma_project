@@ -12,8 +12,9 @@ class User(AbstractUser):
     otp = models.CharField(max_length=6, null = True) ##Keep in mind this one
     refresh_token = models.CharField(max_length=1000, null = True)
     created_at = models.DateTimeField(auto_now_add=True)
-    uuid = models.UUIDField(default=uuid.uuid4,editable=True , unique=True) #TODO
-
+    uuid = models.UUIDField(default=uuid.uuid4,editable=True , unique=True)
+    is_teacher = models.BooleanField(default=False)
+    teacher_requested = models.BooleanField(default=False)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 

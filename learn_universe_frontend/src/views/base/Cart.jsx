@@ -5,7 +5,6 @@ import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import {apiInstance} from "../../utils/axios.js";
 import {CartContext} from "../plugin/Context.js";
-import api from "js-cookie";
 import Swal from "sweetalert2";
 import UserData from "../plugin/UserData.js";
 
@@ -22,7 +21,6 @@ function Cart() {
       if (existingCartId) {
         const res = await apiInstance.get(`course/cart-list/${existingCartId}/`);
         setCart(res.data);
-        console.log(res.data);
 
         const statRes = await apiInstance.get(`cart/stats/${existingCartId}`);
         setCartStat(statRes.data);

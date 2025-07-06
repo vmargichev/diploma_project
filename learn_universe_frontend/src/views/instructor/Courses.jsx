@@ -93,58 +93,13 @@ function Courses() {
                                                 <td><p className='mt-3 badge bg-warning text-dark' >Intermediate</p></td>
                                                 <td><p className='mt-3'>07 Aug, 2025</p></td>
                                                 <td>
-                                                    <button className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></button>
+                                                    <Link to={`/instructor/edit-course/${param.course_id}/`} className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></Link>
                                                     <button className='btn btn-danger btn-sm mt-3 me-1'><i className='fas fa-trash'></i></button>
                                                     <button className='btn btn-secondary btn-sm mt-3 me-1'><i className='fas fa-eye'></i></button>
                                                 </td>
                                             </tr>
 
-                                            <tr>
-                                                <td>
-                                                    <div className="d-flex align-items-center">
-                                                        <div>
-                                                            <a href="#">
-                                                                <img src="https://geeksui.codescandy.com/geeks/assets/images/course/course-react.jpg" alt="course" className="rounded img-4by3-lg" style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
-                                                            </a>
-                                                        </div>
-                                                        <div className="ms-3">
-                                                            <h4 className="mb-1 h6">
-                                                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                                                    Create a Website with WordPress
-                                                                </a>
-                                                            </h4>
-                                                            <ul className="list-inline fs-6 mb-0">
-                                                                <li className="list-inline-item">
-                                                                    <small><i className='bi bi-clock-history'></i>
-                                                                        <span className='ms-1'>1hr 30 Mins</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='bi bi-reception-4'></i>
-                                                                        <span className='ms-1'>Beginner</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='fas fa-dollar-sign'></i>
-                                                                        <span>30.99</span>
-                                                                    </small>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td><p className='mt-3'>71</p></td>
-                                                <td><p className='mt-3 badge bg-success' >Intermediate</p></td>
-                                                <td><p className='mt-3 badge bg-warning text-dark' >Intermediate</p></td>
-                                                <td><p className='mt-3'>07 Aug, 2025</p></td>
-                                                <td>
-                                                    <button className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></button>
-                                                    <button className='btn btn-danger btn-sm mt-3 me-1'><i className='fas fa-trash'></i></button>
-                                                    <button className='btn btn-secondary btn-sm mt-3 me-1'><i className='fas fa-eye'></i></button>
-                                                </td>
-                                            </tr>
+
                                         </tbody>
                                     </table>
                                 </div>
