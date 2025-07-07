@@ -30,7 +30,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['full_name', 'email', 'password', 'password2']
+        fields = ["id", 'full_name', 'email', 'password', 'password2']
 
     def validate(self, attr):
 

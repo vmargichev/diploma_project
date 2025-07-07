@@ -93,6 +93,59 @@ class PasswordResetEmailVerifyAPIView(generics.CreateAPIView):
         return Response({"detail": "If an account with this email exists, a password reset link has been sent."},
                         status=status.HTTP_200_OK)
 
+
+class EmailTeacherRequestAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        user_id = kwargs.get('user_id')
+        if not user_id:
+            return Response(
+                {"error": "user_id  is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "If an account with this email exists, an admin notification has been sent."},
+                status=status.HTTP_200_OK
+            )
+
+        admin_url = f"http://127.0.0.1:8000/admin/userauths/user/{user.id}/change/"
+
+        context = {
+            "admin_url": admin_url,
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name if hasattr(user, 'full_name') else user.username,
+        }
+
+        subject = "New Teacher Registration Request"
+        text_body = render_to_string("email/teacher_request.txt", context)
+        html_body = render_to_string("email/teacher_request.html", context)
+
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=["vesko1410@gmail.com"],
+            body=text_body
+        )
+        msg.attach_alternative(html_body, "text/html")
+
+        try:
+            msg.send()
+            return Response(
+                {"detail": "If an account with this email exists, an admin notification has been sent."},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Could not send admin notification email. Error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class PasswordChangeAPIView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 

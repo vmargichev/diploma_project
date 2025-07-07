@@ -53,7 +53,7 @@ export const login = async (email, password) => {
   }
 };
 
-export const register = async (full_name, email, password, password2) => {
+export const register = async (full_name, email, password, password2, teacher_request) => {
   try {
     Cookie.remove("access_token");
     Cookie.remove("refresh_token");
@@ -63,6 +63,9 @@ export const register = async (full_name, email, password, password2) => {
       password,
       password2,
     });
+    apiInstance.post(`user/request-teacher/${data?.id}/`).then((res) => {
+      console.log(res.data.message)
+    })
     if (status === 201) {
       await Swal.fire({
         icon: "success",

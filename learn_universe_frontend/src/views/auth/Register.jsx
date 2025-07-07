@@ -22,7 +22,8 @@ function Register() {
     setIsLoading(true);
 
     try {
-     const result = await register(full_name, email, password, password2);
+     const result = await register(full_name, email, password, password2, requestTeacher);
+
      if (result && !result.error){
        navigate('/');
      }
