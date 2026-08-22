@@ -1,4 +1,4 @@
-# Django
+# === Django ===
 *.log
 *.pot
 *.pyc
@@ -7,19 +7,35 @@ db.sqlite3
 media/
 staticfiles/
 
-# Virtual environment
+# === Migrations (optional) ===
+*/migrations/__pycache__/
+*/migrations/*.pyc
+# Uncomment the next line **only if you want to exclude migrations**
+# */migrations/*.py
+
+# === Virtual Environments ===
 venv/
 env/
+ENV/
+.venv/
 
-# Environment variables
+# === Environment Variables ===
 .env
 .env.local
 
-# IDE-specific files
+# === IDE / Editor Files ===
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Dependency directories
+# === Frontend (Node.js / React / Vue) ===
 node_modules/
+dist/
+build/
+
+# === macOS ===
+.DS_Store
+
+# === Windows ===
+Thumbs.db
