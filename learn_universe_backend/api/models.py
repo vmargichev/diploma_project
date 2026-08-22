@@ -81,7 +81,8 @@ class Course(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title) + "-" + str(self.course_id)
+            base = slugify(self.title)[:43]  # reserve room for "-" + 6-char course_id
+            self.slug = f"{base}-{self.course_id}"
         super().save(*args, **kwargs)
 
     def students(self):
