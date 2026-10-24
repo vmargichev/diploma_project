@@ -39,3 +39,9 @@ build/
 
 # === Windows ===
 Thumbs.db
+
+# Local assistant configuration and downloaded-file metadata
+.claude/
+CLAUDE.md
+.codex/
+*:Zone.Identifier
