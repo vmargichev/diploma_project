@@ -1,117 +1,201 @@
-import React from 'react'
+import MediaImage from "../../components/MediaImage.jsx";
+import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import moment from 'moment'
+
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
-
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
+import UserData from '../plugin/UserData.js'
+import { apiInstance } from '../../utils/axios.js'
+import Cookies from 'js-cookie'
 
 function Courses() {
-    return (
-        <>
-            <BaseHeader />
+  const user = UserData
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [deleting, setDeleting] = useState(null)
 
-            <section className="pt-5 pb-5">
-                <div className="container">
-                    {/* Header Here */}
-                    <Header />
-                    <div className="row mt-0 mt-md-4">
-                        {/* Sidebar Here */}
-                        <Sidebar />
-                        <div className="col-lg-9 col-md-8 col-12">
-                            <div className="row mb-4">
-                                <h4 className="mb-0 mb-2 mt-4"> <i className='bi bi-grid-fill'></i> Courses</h4>
-                            </div>
-                            <div className="card mb-4">
-                                <div className="card-header">
-                                    <span>
-                                        Manage your courses from here, earch, view, edit or delete courses.
-                                    </span>
-                                </div>
-                                <div className="card-body">
-                                    <form className="row gx-3">
-                                        <div className="col-lg-12 col-md-12 col-12 mb-lg-0 mb-2">
-                                            <input
-                                                type="search"
-                                                className="form-control"
-                                                placeholder="Search Your Courses"
-                                            />
-                                        </div>
-                                    </form>
-                                </div>
-                                <div className="table-responsive overflow-y-hidden">
-                                    <table className="table mb-0 text-nowrap table-hover table-centered text-nowrap">
-                                        <thead className="table-light">
-                                            <tr>
-                                                <th>Courses</th>
-                                                <th>Enrolled</th>
-                                                <th>Level</th>
-                                                <th>Status</th>
-                                                <th>Date Created</th>
-                                                <th>Action</th>
-                                                <th />
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <div className="d-flex align-items-center">
-                                                        <div>
-                                                            <a href="#">
-                                                                <img src="https://geeksui.codescandy.com/geeks/assets/images/course/course-python.jpg" alt="course" className="rounded img-4by3-lg" style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }} />
-                                                            </a>
-                                                        </div>
-                                                        <div className="ms-3">
-                                                            <h4 className="mb-1 h6">
-                                                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                                                    Create a Website with WordPress
-                                                                </a>
-                                                            </h4>
-                                                            <ul className="list-inline fs-6 mb-0">
-                                                                <li className="list-inline-item">
-                                                                    <small><i className='bi bi-clock-history'></i>
-                                                                        <span className='ms-1'>1hr 30 Mins</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='bi bi-reception-4'></i>
-                                                                        <span className='ms-1'>Beginner</span>
-                                                                    </small>
-                                                                </li>
-                                                                <li className="list-inline-item">
-                                                                    <small>
-                                                                        <i className='fas fa-dollar-sign'></i>
-                                                                        <span>30.99</span>
-                                                                    </small>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td><p className='mt-3'>71</p></td>
-                                                <td><p className='mt-3 badge bg-success' >Intermediate</p></td>
-                                                <td><p className='mt-3 badge bg-warning text-dark' >Intermediate</p></td>
-                                                <td><p className='mt-3'>07 Aug, 2025</p></td>
-                                                <td>
-                                                    <Link to={`/instructor/edit-course/${param.course_id}/`} className='btn btn-primary btn-sm mt-3 me-1'><i className='fas fa-edit'></i></Link>
-                                                    <button className='btn btn-danger btn-sm mt-3 me-1'><i className='fas fa-trash'></i></button>
-                                                    <button className='btn btn-secondary btn-sm mt-3 me-1'><i className='fas fa-eye'></i></button>
-                                                </td>
-                                            </tr>
+  const fetchCourses = () => {
+    if (!user?.user_id) return
+    apiInstance
+      .get(`teacher/course-lists/${user.user_id}/`)
+      .then(res => setCourses(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false))
+  }
 
+  useEffect(() => {
+    fetchCourses()
+  }, [])
 
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+  const handleDelete = async course_id => {
+    if (!window.confirm('Disable this course? It will no longer be visible to students.')) return
+    setDeleting(course_id)
+    try {
+      await apiInstance.delete(`teacher/course-delete/${course_id}/`, {
+        headers: { Authorization: `Bearer ${Cookies.get('access_token')}` },
+      })
+      fetchCourses()
+    } catch (err) {
+      console.error(err)
+      alert('Failed to delete course.')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  const filtered = courses.filter(c =>
+    c.title?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <>
+      <BaseHeader />
+
+      <section className="pt-5 pb-5">
+        <div className="container">
+          <Header />
+          <div className="row mt-0 mt-md-4">
+            <Sidebar />
+            <div className="col-lg-9 col-md-8 col-12">
+              <div className="row mb-4">
+                <h4 className="mb-0 mb-2 mt-4">
+                  <i className="bi bi-grid-fill"></i> Courses
+                </h4>
+              </div>
+
+              <div className="card mb-4">
+                <div className="card-header">
+                  <span>Manage your courses — search, view, edit or disable courses.</span>
                 </div>
-            </section>
+                <div className="card-body">
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Search Your Courses"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
 
-            <BaseFooter />
-        </>
-    )
+                <div className="table-responsive overflow-y-hidden">
+                  <table className="table mb-0 text-nowrap table-hover table-centered">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Courses</th>
+                        <th>Enrolled</th>
+                        <th>Level</th>
+                        <th>Status</th>
+                        <th>Date Created</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading && (
+                        <tr>
+                          <td colSpan={6} className="text-center py-4">
+                            <span className="spinner-border spinner-border-sm me-2" />
+                            Loading…
+                          </td>
+                        </tr>
+                      )}
+                      {!loading && filtered.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="text-center py-4 text-muted">
+                            {search ? 'No courses match your search.' : 'No courses yet. Create your first course!'}
+                          </td>
+                        </tr>
+                      )}
+                      {filtered.map(course => (
+                        <tr key={course.id}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              {course.image ? (
+                                <MediaImage kind="course"
+                                  src={course.image}
+                                  alt="course"
+                                  className="rounded"
+                                  style={{ width: 100, height: 70, objectFit: 'cover', flexShrink: 0 }}
+                                />
+                              ) : (
+                                <div
+                                  className="bg-secondary rounded d-flex align-items-center justify-content-center"
+                                  style={{ width: 100, height: 70, flexShrink: 0 }}
+                                >
+                                  <i className="fas fa-book text-white fs-4"></i>
+                                </div>
+                              )}
+                              <div className="ms-3">
+                                <h5 className="mb-1 h6">{course.title}</h5>
+                                <ul className="list-inline fs-6 mb-0">
+                                  <li className="list-inline-item">
+                                    <small>
+                                      <i className="bi bi-reception-4"></i>
+                                      <span className="ms-1">{course.level}</span>
+                                    </small>
+                                  </li>
+                                  <li className="list-inline-item">
+                                    <small>
+                                      <i className="fas fa-dollar-sign"></i>
+                                      <span className="ms-1">{course.price}</span>
+                                    </small>
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="align-middle">{course.students?.length ?? 0}</td>
+                          <td className="align-middle">
+                            <span className="badge bg-info text-dark">{course.level}</span>
+                          </td>
+                          <td className="align-middle">
+                            <span
+                              className={`badge ${
+                                course.platform_status === 'Published'
+                                  ? 'bg-success'
+                                  : course.platform_status === 'Disabled'
+                                  ? 'bg-danger'
+                                  : 'bg-warning text-dark'
+                              }`}
+                            >
+                              {course.platform_status}
+                            </span>
+                          </td>
+                          <td className="align-middle">{moment(course.date).format('DD MMM, YYYY')}</td>
+                          <td className="align-middle">
+                            <Link
+                              to={`/instructor/edit-course/${course.id}/`}
+                              className="btn btn-primary btn-sm me-1"
+                            >
+                              <i className="fas fa-edit"></i>
+                            </Link>
+                            <button
+                              className="btn btn-danger btn-sm me-1"
+                              disabled={deleting === course.id}
+                              onClick={() => handleDelete(course.id)}
+                            >
+                              {deleting === course.id
+                                ? <span className="spinner-border spinner-border-sm" />
+                                : <i className="fas fa-trash"></i>}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <BaseFooter />
+    </>
+  )
 }
 
 export default Courses

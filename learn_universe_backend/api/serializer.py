@@ -22,6 +22,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['full_name'] = user.full_name
         token['email'] = user.email
         token['username'] = user.username
+        token['is_teacher'] = user.is_teacher
         return token
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -222,16 +223,17 @@ class EnrolledCourseSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.title", read_only=True, default="")
     variants = VariantSerializer(many=True, required=False, read_only=True, )
     lectures = VariantItemSerializer(many=True, required=False, read_only=True, )
     reviews = ReviewSerializer(many=True, read_only=True, required=False)
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), required=False, allow_null=True)
-    teacher = TeacherSerializer(required=False, allow_null=True)
+    teacher = TeacherSerializer(read_only=True)
     students = EnrolledCourseSerializer(many=True, read_only=True, required=False)
 
 
     class Meta:
-        fields = ["id", "category", "teacher", "file", "image", "title", "description", "price", "language", "level",
+        fields = ["id", "category", "category_name", "teacher", "file", "image", "title", "description", "price", "language", "level",
                   "platform_status", "teacher_course_status", "featured", "course_id", "slug", "date", "students",
                   "variants", "lectures", "average_rating", "rating_count", "reviews", ]
         model = api_models.Course
@@ -280,3 +282,11 @@ class TeacherSummarySerializer(serializers.Serializer):
 
 class FileUploadSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
+
+
+class RelatedCourseSerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source='teacher.full_name', read_only=True, default='')
+
+    class Meta:
+        model = api_models.Course
+        fields = ['id', 'title', 'slug', 'image', 'price', 'level', 'language', 'teacher_name']

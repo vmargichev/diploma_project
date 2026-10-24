@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useEffect, useRef, useState, useContext} from 'react'
 import {Link, useNavigate} from 'react-router-dom'
 
@@ -164,7 +165,7 @@ function Wishlist() {
                       {/* Card */}
                       <div className="card card-hover">
                         <Link to={`/course-detail/${c?.course.slug}/`}>
-                          <img
+                          <MediaImage kind="course"
                             src={c?.course.image}
                             alt="course"
                             className="card-img-top"

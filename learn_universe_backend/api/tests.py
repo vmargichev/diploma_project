@@ -14,7 +14,7 @@ class CartAPIViewTests(APITestCase):
         self.teacher = Teacher.objects.create(user=self.user)
         self.course = Course.objects.create(title="Test Course", price=100.00, teacher=self.teacher)
         self.country = Country.objects.create(name="Bulgaria", tax_rate=20, active=True)
-        self.cart_id = str(uuid4())
+        self.cart_id = uuid4().hex[:20]
 
         self.cart = Cart.objects.create(
             cart_id=self.cart_id,
@@ -44,7 +44,7 @@ class CartAPIViewTests(APITestCase):
         )
         self.coupon = Coupon.objects.create(code="SAVE20", discount=20, teacher=self.course.teacher)
 
-    def test_create_cart_item_success(self):
+    def test_duplicate_cart_item_is_rejected(self):
         url = reverse('cart_create')
         data = {
             "course": self.course.pk,
@@ -62,7 +62,7 @@ class CartAPIViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["course"]["id"], self.course.id)
-        self.assertEqual(response.data[0]["user"]["id"], self.user.id)
+        self.assertEqual(response.data[0]["user"], self.user.id)
 
     def test_cart_item_delete_success(self):
         url = reverse("cart_item_delete", kwargs={"cart_id": self.cart.cart_id, "course": self.course.pk})
@@ -87,7 +87,7 @@ class CartAPIViewTests(APITestCase):
             "email": "test@example.com",
             "country": self.country.name,
             "cart_id": self.cart_id,
-            "user_id": str(self.user.uuid),
+            "user_id": self.user.id,
         }
         response = self.client.post(url, data, format="json")
 

@@ -147,11 +147,11 @@ WSGI_APPLICATION = 'learn_universe_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'learnuniverse_db',
-        'USER': 'postgres',
-        'PASSWORD': 'mysecretpassword',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': config('POSTGRES_DB', default='learnuniverse_db'),
+        'USER': config('POSTGRES_USER', default='postgres'),
+        'PASSWORD': config('POSTGRES_PASSWORD', default='mysecretpassword'),
+        'HOST': config('POSTGRES_HOST', default='127.0.0.1'),
+        'PORT': config('POSTGRES_PORT', default='5432'),
     }
 
 }
@@ -188,8 +188,14 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=config('SIMPLE_JWT_SLIDING_TOKEN_REFRESH_LIFETIME_DAYS', default=1, cast=int)),
 }
 
-CORS_ALLOW_ALL_ORIGIN = config('CORS_ALLOW_ALL_ORIGIN', default=True, cast=bool)
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in config(
+    'CORS_ALLOWED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173'
+).split(',') if origin.strip()]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = list(dict.fromkeys(CORS_ALLOWED_ORIGINS + [
+        'http://localhost:5173', 'http://127.0.0.1:5173',
+    ]))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -231,7 +237,7 @@ STATIC_URL = config('STATIC_URL', default='static/')
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, config('STATICFILES_DIRS_PATH', default="static"))]
 
-STATIC_ROOT = BASE_DIR / config('STATIC_ROOT_PATH', default='templates')
+STATIC_ROOT = BASE_DIR / config('STATIC_ROOT_PATH', default='staticfiles')
 
 MEDIA_URL = config('MEDIA_URL', default='/media/')
 
@@ -242,23 +248,25 @@ MEDIA_ROOT = BASE_DIR / config('MEDIA_ROOT_PATH', default='media')
 DEFAULT_AUTO_FIELD = config('DEFAULT_AUTO_FIELD', default='django.db.models.BigAutoField')
 
 # MAILGUN_SECRET_KEY = config('MAILGUN_SECRET_KEY')
-EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 
-MAILGUN_API_KEY = config('MAILGUN_API_KEY')
-MAILGUN_SENDER_DOMAIN = config('MAILGUN_SENDER_DOMAIN')
-MAILERSEND_API_TOKEN = config('MAILERSEND_API_TOKEN')
+MAILGUN_API_KEY = config('MAILGUN_API_KEY', default='')
+MAILGUN_SENDER_DOMAIN = config('MAILGUN_SENDER_DOMAIN', default='')
+MAILERSEND_API_TOKEN = config('MAILERSEND_API_TOKEN', default='')
 
-STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 
-FRONTEND_SITE_URL = config('FRONTEND_SITE_URL')
+FRONTEND_SITE_URL = config('FRONTEND_SITE_URL', default='http://localhost:5173')
 # BACKEND_SITE_URL = config('BACKEND_SITE_URL')
 
 ANYMAIL = {
-    MAILERSEND_API_TOKEN : config('MAILERSEND_API_TOKEN'),
-    MAILGUN_API_KEY : config('MAILGUN_API_KEY'),
+    'MAILERSEND_API_TOKEN': MAILERSEND_API_TOKEN,
+    'MAILGUN_API_KEY': MAILGUN_API_KEY,
+    'MAILGUN_SENDER_DOMAIN': MAILGUN_SENDER_DOMAIN,
+    'MAILGUN_API_URL': config('MAILGUN_API_URL', default='https://api.mailgun.net/v3'),
 }
 
-FROM_EMAIL = config('FROM_EMAIL')
+FROM_EMAIL = config('FROM_EMAIL', default='noreply@learnuniverse.local')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

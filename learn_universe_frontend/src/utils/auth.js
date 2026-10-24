@@ -63,9 +63,9 @@ export const register = async (full_name, email, password, password2, teacher_re
       password,
       password2,
     });
-    apiInstance.post(`user/request-teacher/${data?.id}/`).then((res) => {
-      console.log(res.data.message)
-    })
+    if (teacher_request) {
+      await apiInstance.post(`user/request-teacher/${data.id}/`);
+    }
     if (status === 201) {
       await Swal.fire({
         icon: "success",
@@ -134,11 +134,13 @@ export const setUser = async () => {
 export const setAuthUser = (access_token, refresh_token) => {
   Cookie.set("access_token", access_token, {
     expires: 1,
-    secure: true,
+    secure: window.location.protocol === "https:",
+    sameSite: "lax",
   });
   Cookie.set("refresh_token", refresh_token, {
     expires: 5,
-    secure: true,
+    secure: window.location.protocol === "https:",
+    sameSite: "lax",
   });
 
   let user = null;

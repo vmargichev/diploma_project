@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
 import BaseHeader from "../partials/BaseHeader";
@@ -50,7 +51,7 @@ function Students() {
                     <div className="card mb-4">
                       <div className="card-body">
                         <div className="text-center">
-                          <img
+                          <MediaImage kind="avatar"
                             src={student?.image}
                             className="rounded-circle avatar-xl mb-3"
                             style={{

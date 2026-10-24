@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useContext, useEffect, useState} from "react";
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
@@ -162,7 +163,7 @@ function Search() {
                       {/* Card */}
                       <div className="card card-hover">
                         <Link to={`/course-detail/${c.slug}/`}>
-                          <img
+                          <MediaImage kind="course"
                               src={c.image}
                               alt="course"
                               className="card-img-top"

@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React from 'react'
 import { Link } from 'react-router-dom'
 
@@ -32,7 +33,7 @@ function QADetail() {
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
                                                     <a href="#">
-                                                        <img className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-2.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
+                                                        <MediaImage kind="avatar" className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-2.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
                                                 <div className="ms-2">
@@ -58,7 +59,7 @@ function QADetail() {
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
                                                     <a href="#">
-                                                        <img className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-1.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
+                                                        <MediaImage kind="avatar" className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-1.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
                                                 <div className="ms-2">
@@ -84,7 +85,7 @@ function QADetail() {
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
                                                     <a href="#">
-                                                        <img className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
+                                                        <MediaImage kind="avatar" className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
                                                 <div className="ms-2">
@@ -110,7 +111,7 @@ function QADetail() {
                                             <div className="d-flex">
                                                 <div className="avatar avatar-sm flex-shrink-0">
                                                     <a href="#">
-                                                        <img className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
+                                                        <MediaImage kind="avatar" className="avatar-img rounded-circle" src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg" style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }} alt="womans image" />
                                                     </a>
                                                 </div>
                                                 <div className="ms-2">

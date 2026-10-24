@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useEffect, useState} from 'react';
 import Sidebar from './Partials/Sidebar';
 import Header from './Partials/Header';
@@ -97,7 +98,7 @@ function Dashboard() {
                                                     <td>
                                                         <div className="d-flex align-items-center">
                                                             <div>
-                                                                <img
+                                                                <MediaImage kind="course"
                                                                     src={course.image}
                                                                     alt={course.title}
                                                                     className="rounded img-4by3-lg"

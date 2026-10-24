@@ -1,95 +1,107 @@
-import React from 'react'
+import MediaImage from "../../components/MediaImage.jsx";
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
+import UserData from '../plugin/UserData.js'
+import { apiInstance } from '../../utils/axios.js'
 
 function QA() {
+  const [enrollments, setEnrollments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const user = UserData
+
+  useEffect(() => {
+    if (!user?.user_id) return
+    apiInstance
+      .get(`student/course-list/${user.user_id}/`)
+      .then(res => setEnrollments(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <>
       <BaseHeader />
 
       <section className="pt-5 pb-5">
         <div className="container">
-          {/* Header Here */}
           <Header />
           <div className="row mt-0 mt-md-4">
-            {/* Sidebar Here */}
             <Sidebar />
             <div className="col-lg-9 col-md-8 col-12">
-              <h4 className="mb-0 mb-4"> <i className='fas fa-envelope'></i> Question and Answer</h4>
+              <h4 className="mb-4">
+                <i className="fas fa-envelope me-2"></i>Question and Answer
+              </h4>
 
               <div className="card mb-4">
                 <div className="card-header">
                   <span>All Questions and Answers are listed here</span>
                 </div>
-                <div className="table-responsive overflow-y-hidden">
-                  <table className="table mb-0 text-nowrap table-hover table-centered text-nowrap">
+                <div className="table-responsive">
+                  <table className="table mb-0 table-hover table-centered">
                     <thead className="table-light">
                       <tr>
-                        <th>Courses</th>
+                        <th>Course</th>
                         <th>Questions</th>
                         <th>Action</th>
-                        <th />
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div>
-                              <a href="#">
-                                <img
-                                  src="https://geeksui.codescandy.com/geeks/assets/images/course/course-angular.jpg"
+                      {loading && (
+                        <tr>
+                          <td colSpan={3} className="text-center py-4">
+                            <span className="spinner-border spinner-border-sm me-2" />
+                            Loading…
+                          </td>
+                        </tr>
+                      )}
+                      {!loading && enrollments.length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="text-center py-4 text-muted">
+                            You are not enrolled in any courses yet.
+                          </td>
+                        </tr>
+                      )}
+                      {enrollments.map(enrollment => (
+                        <tr key={enrollment.enrollment_id}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              {enrollment.course?.image ? (
+                                <MediaImage kind="course"
+                                  src={enrollment.course.image}
                                   alt="course"
-                                  className="rounded img-4by3-lg"
-                                  style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }}
+                                  style={{ width: 80, height: 55, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                                  className="me-3"
                                 />
-                              </a>
+                              ) : (
+                                <div
+                                  className="me-3 bg-secondary d-flex align-items-center justify-content-center"
+                                  style={{ width: 80, height: 55, borderRadius: 4, flexShrink: 0 }}
+                                >
+                                  <i className="fas fa-book text-white"></i>
+                                </div>
+                              )}
+                              <span className="fw-semibold">{enrollment.course?.title}</span>
                             </div>
-                            <div className="ms-3">
-                              <h4 className="mb-1 h5">
-                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                  Angular Masterclass Course
-                                </a>
-                              </h4>
-                            </div>
-                          </div>
-                        </td>
-                        <td><p className='mt-3'>5</p></td>
-                        <td>
-                          <Link to={`/student/question-answer/course_id/`} className='btn btn-primary btn-sm mt-3'>Join Conversation <i className='fas fa-arrow-right'></i></Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div>
-                              <a href="#">
-                                <img
-                                  src="https://geeksui.codescandy.com/geeks/assets/images/course/course-react.jpg"
-                                  alt="course"
-                                  className="rounded img-4by3-lg"
-                                  style={{ width: "100px", height: "70px", borderRadius: "50%", objectFit: "cover" }}
-                                />
-                              </a>
-                            </div>
-                            <div className="ms-3">
-                              <h4 className="mb-1 h5">
-                                <a href="#" className="text-inherit text-decoration-none text-dark">
-                                  Learn React for Beginners
-                                </a>
-                              </h4>
-                            </div>
-                          </div>
-                        </td>
-                        <td><p className='mt-3'>5</p></td>
-                        <td>
-                          <Link to={`/student/question-answer/course_id/`} className='btn btn-primary btn-sm mt-3'>Join Conversation <i className='fas fa-arrow-right'></i></Link>
-                        </td>
-                      </tr>
+                          </td>
+                          <td className="align-middle">
+                            {enrollment.question_answer?.length ?? 0}
+                          </td>
+                          <td className="align-middle">
+                            <Link
+                              to={`/student/question-answer/${enrollment.course?.id}/`}
+                              state={{ courseName: enrollment.course?.title }}
+                              className="btn btn-primary btn-sm"
+                            >
+                              Join Conversation <i className="fas fa-arrow-right ms-1"></i>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

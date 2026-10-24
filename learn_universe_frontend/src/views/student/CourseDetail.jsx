@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useEffect, useRef, useState} from 'react'
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
@@ -563,7 +564,7 @@ function CourseDetail() {
                                             <React.Fragment key={i.id}>
                                               <div className="d-flex justify-content-between align-items-center">
                                                 <div className="position-relative d-flex align-items-center">
-                                                  {i.preview === true ? (
+                                                  {Boolean(course.enrollment_id) ? (
                                                     <button
                                                       onClick={() =>
                                                         handleShow(i)
@@ -588,10 +589,10 @@ function CourseDetail() {
                                                 </div>
                                                 <div className="d-flex">
                                                   <p className="mb-0 me-2">
-                                                    {i.preview === true &&
+                                                    {Boolean(course.enrollment_id) &&
                                                       (i.duration || "00:00")}
                                                   </p>
-                                                  {i.preview === true && (
+                                                  {Boolean(course.enrollment_id) && (
                                                     <input
                                                       type="checkbox"
                                                       onChange={() =>
@@ -811,7 +812,7 @@ function CourseDetail() {
                                         <div className="d-sm-flex justify-content-sm-between mb-3">
                                           <div className="d-flex align-items-center">
                                             <div className="avatar avatar-sm flex-shrink-0">
-                                              <img
+                                              <MediaImage kind="avatar"
                                                 src={
                                                   q?.profile?.image?.startsWith(
                                                     "http://127.0.0.1:8000/",
@@ -1073,7 +1074,7 @@ function CourseDetail() {
                   <div className="d-flex">
                     <div className="avatar avatar-sm flex-shrink-0">
                       <a href="#">
-                        <img
+                        <MediaImage kind="avatar"
                           className="avatar-img rounded-circle"
                           src={
                             m?.profile?.image?.startsWith(

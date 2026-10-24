@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
 import BaseHeader from '../partials/BaseHeader'
@@ -289,7 +290,7 @@ function CourseEdit() {
                       <label htmlFor="courseTHumbnail" className="form-label">
                         Thumbnail Preview
                       </label>
-                      <img
+                      <MediaImage kind="course"
                           style={{
                             width: "100%",
                             height: "330px",

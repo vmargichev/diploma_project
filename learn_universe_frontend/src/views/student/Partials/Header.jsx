@@ -1,3 +1,4 @@
+import MediaImage from "../../../components/MediaImage.jsx";
 import React, {useEffect, useState} from 'react'
 import {useNavigate} from "react-router-dom";
 import {apiInstance} from "../../../utils/axios.js";
@@ -32,7 +33,7 @@ function Header() {
             <div className="d-flex align-items-end justify-content-between">
               <div className="d-flex align-items-center">
                 <div className="me-2 position-relative d-flex justify-content-end align-items-end mt-n5">
-                  <img
+                  <MediaImage kind="avatar"
                     src={user?.image}
                     className="avatar-xl rounded-circle border border-4 border-white"
                     alt="avatar"

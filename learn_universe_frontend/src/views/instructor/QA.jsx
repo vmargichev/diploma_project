@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "./Partials/Sidebar";
 import Header from "./Partials/Header";
@@ -125,7 +126,7 @@ function QA() {
                                                 <div className="d-sm-flex justify-content-sm-between mb-3">
                                                     <div className="d-flex align-items-center">
                                                         <div className="avatar avatar-sm flex-shrink-0">
-                                                            <img
+                                                            <MediaImage kind="avatar"
                                                                 src={q?.profile?.image}
                                                                 className="avatar-img rounded-circle"
                                                                 alt="avatar"
@@ -178,7 +179,7 @@ function QA() {
                                     <div className="d-flex">
                                         <div className="avatar avatar-sm flex-shrink-0">
                                             <a href="#">
-                                                <img
+                                                <MediaImage kind="avatar"
                                                     className="avatar-img rounded-circle"
                                                     src={m.profile.image?.startsWith("http://127.0.0.1:8000") ? m.profile.image : `http://127.0.0.1:8000${m.profile.image}`}
                                                     style={{
@@ -216,7 +217,7 @@ function QA() {
                             <div ref={lastElementRef}></div>
                         </ul>
 
-                        <form class="w-100 d-flex" onSubmit={sendNewMessage}>
+                        <form className="w-100 d-flex" onSubmit={sendNewMessage}>
                             <textarea name="message" className="one form-control pe-4 bg-light w-75" id="autoheighttextarea" rows="2" onChange={handleMessageChange} placeholder="What's your question?"></textarea>
                             <button className="btn btn-primary ms-2 mb-0 w-25" type="submit">
                                 Post <i className="fas fa-paper-plane"></i>

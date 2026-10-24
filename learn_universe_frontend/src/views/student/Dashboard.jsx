@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useEffect, useState} from 'react'
 import { Link } from 'react-router-dom'
 
@@ -150,7 +151,7 @@ function Dashboard() {
                                                     <div className="d-flex align-items-center">
                                                         <div>
                                                             <Link to={`/student/courses/${course.enrollment_id}`} className="text-decoration-none">
-                                                                <img
+                                                                <MediaImage kind="course"
                                                                     src={course.course.image}
                                                                     alt={course.course.title}
                                                                     className="rounded img-4by3-lg"

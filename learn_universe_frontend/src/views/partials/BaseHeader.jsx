@@ -10,7 +10,7 @@ function BaseHeader() {
   const [cartCount, setCartCount] = useContext(CartContext);
   const [isLoggedIn, user] = useAuthStore((state) => [
       state.isLoggedIn,
-      state.user,
+      state.userData,
   ]);
 
   return (
@@ -39,7 +39,7 @@ function BaseHeader() {
             </button>
 
               <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                  <div className="collapse navbar-collapse" id="navbarSupportedContent">
+                  <div className="me-auto">
                       <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                           {isLoggedIn() && (
                               <>
@@ -74,6 +74,7 @@ function BaseHeader() {
                                   </li>
 
 
+                                  {user?.is_teacher && (
                                       <li className="nav-item dropdown">
                                           <Link
                                               className="nav-link dropdown-toggle"
@@ -118,6 +119,7 @@ function BaseHeader() {
                                               </li>
                                           </ul>
                                       </li>
+                                  )}
 
                               </>
                           )}

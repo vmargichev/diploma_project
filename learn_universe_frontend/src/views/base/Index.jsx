@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useState, useEffect, useContext} from 'react'
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
@@ -210,7 +211,7 @@ function Index() {
                       {/* Card */}
                       <div className="card card-hover">
                         <Link to={`/course-detail/${c.slug}/`}>
-                          <img
+                          <MediaImage kind="course"
                             src={c.image}
                             alt="course"
                             className="card-img-top"
@@ -237,7 +238,7 @@ function Index() {
                           </div>
                           <h4 className="mb-2 text-truncate-line-2 ">
                             <Link
-                              to={`/course-detail/slug/`}
+                              to={`/course-detail/${c.slug}/`}
                               className="text-inherit text-decoration-none text-dark fs-5"
                             >
                               {c.title}

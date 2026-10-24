@@ -4,6 +4,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
+    path("course/course-detail/<slug>/related/", api_views.RelatedCourseListAPIView.as_view(), name="related_courses"),
     # Auth
     path("user/token", api_views.MyTokenObtainPairView.as_view(), name="token_obtain"),
     path("user/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
@@ -11,6 +12,7 @@ urlpatterns = [
     path("user/reset-pass/<email>/", api_views.PasswordResetEmailVerifyAPIView.as_view(), name="password_reset"),
     path("user/change-pass/", api_views.PasswordChangeAPIView.as_view(), name="password_change"),
     path("user/get-user/<user_id>/", api_views.UserProfileView.as_view(), name="get_user"),
+    path("user/update-password/", api_views.UserUpdatePasswordInSessionAPIView.as_view(), name="update_password"),
     path("user/request-teacher/<user_id>/", api_views.EmailTeacherRequestAPIView.as_view(), name="get_user"),
 
     # Core - Course

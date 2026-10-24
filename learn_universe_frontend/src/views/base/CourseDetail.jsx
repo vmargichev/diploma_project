@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useContext} from 'react'
 import {useState, useEffect} from "react"
 import {apiInstance} from "../../utils/axios.js";
@@ -25,21 +26,21 @@ function CourseDetail() {
     const slug = param.slug
 
 
+    const [relatedCourses, setRelatedCourses] = useState([]);
     useEffect(() => {
-        console.log(course)
-        const fetchCourse = async () => {
-            try {
-                const res = await apiInstance.get(`course/course-detail/${slug}/`);
-                setCourse(res.data);
-            } catch (error) {
-                console.error("Error fetching course", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchCourse();
-    }, [address]);
+        let active = true;
+        setIsLoading(true);
+        setCourse(null);
+        setRelatedCourses([]);
+        apiInstance.get(`course/course-detail/${slug}/`)
+            .then(({ data }) => { if (active) setCourse(data); })
+            .catch(() => { if (active) setCourse(null); })
+            .finally(() => { if (active) setIsLoading(false); });
+        apiInstance.get(`course/course-detail/${slug}/related/`)
+            .then(({ data }) => { if (active) setRelatedCourses(data); })
+            .catch(() => { if (active) setRelatedCourses([]); });
+        return () => { active = false; };
+    }, [slug]);
 
     if (isLoading) {
         return (
@@ -145,7 +146,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                 <div className="col-lg-8">
                   {/* Badge */}
                   <h6 className="mb-3 font-base bg-primary text-white py-2 px-4 rounded-2 d-inline-block">
-                    {course?.category?.title || "No Category"}
+                    {course?.category_name || "No Category"}
                   </h6>
                   {/* Title */}
                   <h1 className="mb-3">{course?.title}</h1>
@@ -427,7 +428,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                             <div className="row g-0 align-items-center">
                               <div className="col-md-5">
                                 {/* Image */}
-                                <img
+                                <MediaImage kind="avatar"
                                   src={course?.teacher?.image}
                                   className="img-fluid rounded-3"
                                   alt="instructor-image"
@@ -520,7 +521,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                           <div className="row">
                             <div className="d-md-flex my-4">
                               <div className="avatar avatar-xl me-4 flex-shrink-0">
-                                <img
+                                <MediaImage kind="avatar"
                                   className="avatar-img rounded-circle"
                                   src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-1.jpg"
                                   style={{
@@ -565,7 +566,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                             <div className="d-md-flex my-4">
                               {/* Avatar */}
                               <div className="avatar avatar-xl me-4 flex-shrink-0">
-                                <img
+                                <MediaImage kind="avatar"
                                   className="avatar-img rounded-circle"
                                   src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-1.jpg"
                                   style={{
@@ -1039,7 +1040,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                                     <div className="d-flex">
                                       <div className="avatar avatar-sm flex-shrink-0">
                                         <a href="#">
-                                          <img
+                                          <MediaImage kind="avatar"
                                             className="avatar-img rounded-circle"
                                             src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
                                             style={{
@@ -1089,7 +1090,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                                     <div className="d-flex">
                                       <div className="avatar avatar-sm flex-shrink-0">
                                         <a href="#">
-                                          <img
+                                          <MediaImage kind="avatar"
                                             className="avatar-img rounded-circle"
                                             src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
                                             style={{
@@ -1141,7 +1142,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                                     <div className="d-flex">
                                       <div className="avatar avatar-sm flex-shrink-0">
                                         <a href="#">
-                                          <img
+                                          <MediaImage kind="avatar"
                                             className="avatar-img rounded-circle"
                                             src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
                                             style={{
@@ -1191,7 +1192,7 @@ const addToCart = async (courseId, userId, country, cartId) => {
                                     <div className="d-flex">
                                       <div className="avatar avatar-sm flex-shrink-0">
                                         <a href="#">
-                                          <img
+                                          <MediaImage kind="avatar"
                                             className="avatar-img rounded-circle"
                                             src="https://geeksui.codescandy.com/geeks/assets/images/avatar/avatar-3.jpg"
                                             style={{
@@ -1268,75 +1269,15 @@ const addToCart = async (courseId, userId, country, cartId) => {
                       {/* Video START */}
                       <div className="card shadow p-2 mb-4 z-index-9">
                         <div className="overflow-hidden rounded-3">
-                          <img
+                          <MediaImage kind="course"
                             src={course.image}
                             className="card-img"
                             alt="course image"
                           />
-                          <div
-                            className="m-auto rounded-2 mt-2 d-flex justify-content-center align-items-center"
-                            style={{ backgroundColor: "#ededed" }}
-                          >
-                            <a
-                              data-bs-toggle="modal"
-                              data-bs-target="#exampleModal"
-                              href="https://www.youtube.com/embed/tXHviS-4ygo"
-                              className="btn btn-lg text-danger btn-round btn-white-shadow mb-0"
-                              data-glightbox=""
-                              data-gallery="course-video"
-                            >
-                              <i className="fas fa-play" />
-                            </a>
-                            <span
-                              data-bs-toggle="modal"
-                              data-bs-target="#exampleModal"
-                              className="fw-bold"
-                            >
-                              Course Introduction Video
-                            </span>
-
-                            <div
-                              className="modal fade"
-                              id="exampleModal"
-                              tabIndex={-1}
-                              aria-labelledby="exampleModalLabel"
-                              aria-hidden="true"
-                            >
-                              <div className="modal-dialog">
-                                <div className="modal-content">
-                                  <div className="modal-header">
-                                    <h1
-                                      className="modal-title fs-5"
-                                      id="exampleModalLabel"
-                                    >
-                                      Introduction Videos
-                                    </h1>
-                                    <button
-                                      type="button"
-                                      className="btn-close"
-                                      data-bs-dismiss="modal"
-                                      aria-label="Close"
-                                    />
-                                  </div>
-                                  <div className="modal-body">...</div>
-                                  <div className="modal-footer">
-                                    <button
-                                      type="button"
-                                      className="btn btn-secondary"
-                                      data-bs-dismiss="modal"
-                                    >
-                                      Close
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-primary"
-                                    >
-                                      Save changes
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                          <div className="p-3">
+                            {course.file ? (
+                              <video controls preload="metadata" src={course.file} poster={course.image || undefined} style={{ width: "100%" }} aria-label="Course introduction video" />
+                            ) : <p className="text-muted mb-0">No introduction video has been uploaded yet.</p>}
                           </div>
                         </div>
                         {/* Card body */}
@@ -1525,271 +1466,27 @@ const addToCart = async (courseId, userId, country, cartId) => {
             </div>
           </section>
           <section className="mb-5">
-            <div className="container mb-lg-8 ">
-              <div className="row mb-5 mt-3">
-                {/* col */}
-                <div className="col-12">
-                  <div className="mb-6">
-                    <h2 className="mb-1 h1">Related Courses</h2>
-                    <p>
-                      These are the most popular courses among Geeks Courses
-                      learners worldwide in year 2025
-                    </p>
+            <div className="container">
+              <h2>Related Courses</h2>
+              <p>Explore more courses in the same category.</p>
+              {relatedCourses.length === 0 && <p className="text-muted">No related courses are available yet.</p>}
+              <div className="row g-4">
+                {relatedCourses.map((related) => (
+                  <div className="col-md-6 col-lg-3" key={related.id}>
+                    <article className="card h-100">
+                      <Link to={`/course-detail/${related.slug}/`}>
+                        <MediaImage src={related.image} alt={related.title} className="card-img-top" style={{ aspectRatio: "16 / 9", objectFit: "cover" }} />
+                      </Link>
+                      <div className="card-body">
+                        <small>{related.level} · {related.language}</small>
+                        <h3 className="h5 mt-2"><Link to={`/course-detail/${related.slug}/`}>{related.title}</Link></h3>
+                        <p>By {related.teacher_name || "Learn Universe"}</p>
+                        <strong>€{Number(related.price).toFixed(2)}</strong>
+                      </div>
+                      <div className="card-footer"><Link className="btn btn-primary" to={`/course-detail/${related.slug}/`}>View course</Link></div>
+                    </article>
                   </div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-                    <div className="col">
-                      {/* Card */}
-                      <div className="card card-hover">
-                        <Link to={`/course-detail/slug/`}>
-                          <img
-                            src="https://geeksui.codescandy.com/geeks/assets/images/course/course-css.jpg"
-                            alt="course"
-                            className="card-img-top"
-                          />
-                        </Link>
-                        {/* Card Body */}
-                        <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className="badge bg-info">Intermediate</span>
-                            <a href="#" className="fs-5">
-                              <i className="fas fa-heart text-danger align-middle" />
-                            </a>
-                          </div>
-                          <h4 className="mb-2 text-truncate-line-2 ">
-                            <Link
-                              to={`/course-detail/slug/`}
-                              className="text-inherit text-decoration-none text-dark fs-5"
-                            >
-                              How to easily create a website with JavaScript
-                            </Link>
-                          </h4>
-                          <small>By: Claire Evans</small> <br />
-                          <small>10 Students</small> <br />
-                          <div className="lh-1 mt-3 d-flex">
-                            <span className="align-text-top">
-                              <span className="fs-6">
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star-half text-warning"></i>
-                              </span>
-                            </span>
-                            <span className="text-warning">4.5</span>
-                            <span className="fs-6 ms-2">(10)</span>
-                          </div>
-                        </div>
-                        {/* Card Footer */}
-                        <div className="card-footer">
-                          <div className="row align-items-center g-0">
-                            <div className="col">
-                              <h5 className="mb-0">$39.00</h5>
-                            </div>
-                            <div className="col-auto">
-                              <a
-                                href="#"
-                                className="text-inherit text-decoration-none btn btn-primary"
-                              >
-                                <i className="fas fa-shopping-cart text-primary align-middle me-2 text-white" />
-                                Enroll Now
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col">
-                      {/* Card */}
-                      <div className="card card-hover">
-                        <Link to={`/course-detail/slug/`}>
-                          <img
-                            src="https://geeksui.codescandy.com/geeks/assets/images/course/course-angular.jpg"
-                            alt="course"
-                            className="card-img-top"
-                          />
-                        </Link>
-                        {/* Card Body */}
-                        <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className="badge bg-info">Intermediate</span>
-                            <a href="#" className="fs-5">
-                              <i className="fas fa-heart text-danger align-middle" />
-                            </a>
-                          </div>
-                          <h4 className="mb-2 text-truncate-line-2 ">
-                            <Link
-                              to={`/course-detail/slug/`}
-                              className="text-inherit text-decoration-none text-dark fs-5"
-                            >
-                              How to easily create a website with JavaScript
-                            </Link>
-                          </h4>
-                          <small>By: Claire Evans</small> <br />
-                          <small>10 Students</small> <br />
-                          <div className="lh-1 mt-3 d-flex">
-                            <span className="align-text-top">
-                              <span className="fs-6">
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star-half text-warning"></i>
-                              </span>
-                            </span>
-                            <span className="text-warning">4.5</span>
-                            <span className="fs-6 ms-2">(2)</span>
-                          </div>
-                        </div>
-                        {/* Card Footer */}
-                        <div className="card-footer">
-                          <div className="row align-items-center g-0">
-                            <div className="col">
-                              <h5 className="mb-0">€39.00</h5>
-                            </div>
-                            <div className="col-auto">
-                              <a
-                                href="#"
-                                className="text-inherit text-decoration-none btn btn-primary"
-                              >
-                                <i className="fas fa-shopping-cart text-primary align-middle me-2 text-white" />
-                                Enroll Now
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col">
-                      {/* Card */}
-                      <div className="card card-hover">
-                        <Link to={`/course-detail/slug/`}>
-                          <img
-                            src="https://geeksui.codescandy.com/geeks/assets/images/course/course-react.jpg"
-                            alt="course"
-                            className="card-img-top"
-                          />
-                        </Link>
-                        {/* Card Body */}
-                        <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className="badge bg-info">Intermediate</span>
-                            <a href="#" className="fs-5">
-                              <i className="fas fa-heart text-danger align-middle" />
-                            </a>
-                          </div>
-                          <h4 className="mb-2 text-truncate-line-2 ">
-                            <Link
-                              to={`/course-detail/slug/`}
-                              className="text-inherit text-decoration-none text-dark fs-5"
-                            >
-                              Learn React.Js for Beginners from Start to Finish
-                            </Link>
-                          </h4>
-                          <small>By: Claire Evans</small> <br />
-                          <small> 10 Students</small> <br />
-                          <div className="lh-1 mt-3 d-flex">
-                            <span className="align-text-top">
-                              <span className="fs-6">
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star-half text-warning"></i>
-                              </span>
-                            </span>
-                            <span className="text-warning">1</span>
-                            <span className="fs-6 ms-2">(1)</span>
-                          </div>
-                        </div>
-                        {/* Card Footer */}
-                        <div className="card-footer">
-                          <div className="row align-items-center g-0">
-                            <div className="col">
-                              <h5 className="mb-0">€9.00</h5>
-                            </div>
-                            <div className="col-auto">
-                              <a
-                                href="#"
-                                className="text-inherit text-decoration-none btn btn-primary"
-                              >
-                                <i className="fas fa-shopping-cart text-primary align-middle me-2 text-white" />
-                                Enroll Now
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col">
-                      {/* Card */}
-                      <div className="card card-hover">
-                        <Link to={`/course-detail/slug/`}>
-                          <img
-                            src="https://geeksui.codescandy.com/geeks/assets/images/course/course-python.jpg"
-                            alt="course"
-                            className="card-img-top"
-                          />
-                        </Link>
-                        {/* Card Body */}
-                        <div className="card-body">
-                          <div className="d-flex justify-content-between align-items-center mb-3">
-                            <span className="badge bg-info">Intermediate</span>
-                            <a href="#" className="fs-5">
-                              <i className="fas fa-heart text-danger align-middle" />
-                            </a>
-                          </div>
-                          <h4 className="mb-2 text-truncate-line-2 ">
-                            <Link
-                              to={`/course-detail/slug/`}
-                              className="text-inherit text-decoration-none text-dark fs-5"
-                            >
-                              How to easily create a website with JavaScript
-                            </Link>
-                          </h4>
-                          <small>By: Claire Evans</small> <br />
-                          <small>10 Students</small> <br />
-                          <div className="lh-1 mt-3 d-flex">
-                            <span className="align-text-top">
-                              <span className="fs-6">
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star text-warning"></i>
-                                <i className="fas fa-star-half text-warning"></i>
-                              </span>
-                            </span>
-                            <span className="text-warning">3</span>
-                            <span className="fs-6 ms-2">(12)</span>
-                          </div>
-                        </div>
-                        {/* Card Footer */}
-                        <div className="card-footer">
-                          <div className="row align-items-center g-0">
-                            <div className="col">
-                              <h5 className="mb-0">€39.00</h5>
-                            </div>
-                            <div className="col-auto">
-                              <a
-                                href="#"
-                                className="text-inherit text-decoration-none btn btn-primary"
-                              >
-                                <i className="fas fa-shopping-cart text-primary align-middle me-2 text-white" />
-                                Enroll Now
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </section>

@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import BaseHeader from '../partials/BaseHeader'
 import BaseFooter from '../partials/BaseFooter'
 import {useEffect, useState} from 'react';
@@ -160,7 +161,7 @@ function Checkout() {
                             <td>
                               <div className="d-lg-flex align-items-center">
                                 <div className="w-100px w-md-80px mb-2 mb-md-0">
-                                  <img
+                                  <MediaImage kind="course"
                                     src={item?.course?.image}
                                     style={{
                                       width: "100px",
@@ -269,7 +270,7 @@ function Checkout() {
                       {order?.order_item?.map((item, index) => (
                         <div className="row g-2 shadow p-2 mb-4 rounded-3">
                           <div className="col-sm-4">
-                            <img
+                            <MediaImage kind="course"
                               src={item?.course?.image}
                               className="rounded"
                               style={{

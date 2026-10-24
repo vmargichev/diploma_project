@@ -21,6 +21,8 @@ import StudentCourseDetail from "./views/student/CourseDetail";
 import Wishlist from "./views/student/Wishlist";
 import StudentProfile from "./views/student/Profile";
 import StudentChangePassword from "./views/student/ChangePassword";
+import StudentQA from "./views/student/QA";
+import StudentQADetail from "./views/student/QADetail";
 import Dashboard from "./views/instructor/Dashboard";
 import Review from "./views/instructor/Review";
 import Students from "./views/instructor/Students";
@@ -121,6 +123,22 @@ function App() {
                                 element={
                                     <PrivateRoute>
                                         <StudentChangePassword />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/student/question-answer/"
+                                element={
+                                    <PrivateRoute>
+                                        <StudentQA />
+                                    </PrivateRoute>
+                                }
+                            />
+                            <Route
+                                path="/student/question-answer/:course_id/"
+                                element={
+                                    <PrivateRoute>
+                                        <StudentQADetail />
                                     </PrivateRoute>
                                 }
                             />

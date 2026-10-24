@@ -38,6 +38,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import generics, status, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from api.permissions import IsOwnStudentPath, IsTeacher
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -72,7 +73,7 @@ class PasswordResetEmailVerifyAPIView(generics.CreateAPIView):
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)  # Time-sensitive token
 
-        link = f"http://localhost:5173/create-new-pass/?otp={user.otp}&uidb64={uidb64}&refresh_token={token}"
+        link = f"{settings.FRONTEND_SITE_URL.rstrip('/')}/create-new-pass/?otp={user.otp}&uidb64={uidb64}&refresh_token={token}"
 
         context = {
             "link": link,
@@ -185,6 +186,19 @@ class CourseDetailAPIView(generics.RetrieveAPIView):
             )
         except Exception as e:
             raise NotFound(detail="Course not found") from e
+
+class RelatedCourseListAPIView(generics.ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = api_serializer.RelatedCourseSerializer
+
+    def get_queryset(self):
+        published = Course.objects.filter(platform_status=PlatformStatus.PUBLISHED,
+                                          teacher_course_status=TeacherStatus.PUBLISHED)
+        course = get_object_or_404(published, slug=self.kwargs['slug'])
+        if course.category_id is None:
+            return Course.objects.none()
+        return published.filter(category_id=course.category_id).exclude(pk=course.pk).select_related('teacher').order_by('-date', '-pk')[:4]
+
 
 class CartAPIView(generics.CreateAPIView):
     queryset = Cart.objects.all()
@@ -463,11 +477,12 @@ class StripeCheckoutAPIView(generics.CreateAPIView):
                     },
                 ],
                 mode='payment',
-                success_url = f"{settings.FRONTEND_SITE_URL}payment-success/{order_id}?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url = f"{settings.FRONTEND_SITE_URL}payment-failed/"
+                success_url = f"{settings.FRONTEND_SITE_URL.rstrip('/')}/payment-success/{order_id}?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url = f"{settings.FRONTEND_SITE_URL.rstrip('/')}/cart/"
             )
 
             order.stripe_session_id = checkout_session.id
+            order.save(update_fields=['stripe_session_id'])
 
             return redirect(checkout_session.url)
         except stripe.error.StripeError as e:
@@ -587,7 +602,7 @@ class SearchCourseAPIView(generics.ListAPIView):
 
 class StudentSummaryAPIView(generics.ListAPIView):
     serializer_class = api_serializer.StudentSummarySerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnStudentPath]
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
@@ -611,7 +626,7 @@ class StudentSummaryAPIView(generics.ListAPIView):
 
 class StudentCourseListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.EnrolledCourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnStudentPath]
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
@@ -621,7 +636,7 @@ class StudentCourseListAPIView(generics.ListAPIView):
 
 class StudentCourseDetailAPIView(generics.RetrieveAPIView):
     serializer_class = api_serializer.EnrolledCourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsOwnStudentPath]
     lookup_field = 'enrollment_id'
 
     def get_object(self):
@@ -686,7 +701,7 @@ class StudentNoteCreateAPIView(generics.ListCreateAPIView):
 
 class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = api_serializer.NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_object(self):
         user_id = self.kwargs['user_id']
@@ -694,8 +709,6 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         note_id = self.kwargs['note_id']
 
         user = User.objects.get(id=user_id)
-        if self.request.user != user:
-            raise PermissionDenied(f"No rights {self.request.user}")
         enrolled = EnrolledCourse.objects.get(enrollment_id=enrollment_id)
         note = Note.objects.get(user=user, course=enrolled.course, id=note_id)
         return note
@@ -703,7 +716,7 @@ class StudentNoteDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class StudentRateCourseCreateAPIView(generics.CreateAPIView):
     serializer_class = api_serializer.ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
         user_id = request.data['user_id']
@@ -727,7 +740,7 @@ class StudentRateCourseCreateAPIView(generics.CreateAPIView):
 
 class StudentRateCourseUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = api_serializer.ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_object(self):
         user_id = self.kwargs['user_id']
@@ -833,7 +846,7 @@ class QuestionAnswerMessageSendAPIView(generics.CreateAPIView):
         )
 
         question_serializer = api_serializer.Question_AnswerSerializer(question)
-        return Response({"messgae": "Message Sent", "question": question_serializer.data})
+        return Response({"message": "Message Sent", "question": question_serializer.data})
 
 
 class TeacherSummaryAPIView(generics.ListAPIView):
@@ -886,11 +899,13 @@ class TeacherSummaryAPIView(generics.ListAPIView):
 
 class TeacherCourseListAPIView(generics.ListAPIView):
     serializer_class = api_serializer.CourseSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def get_queryset(self):
         teacher_id = self.kwargs['teacher_id']
-        teacher = Teacher.objects.get(id=teacher_id)
+        if str(self.request.user.pk) != teacher_id:
+            raise PermissionDenied('You can only view your own courses.')
+        teacher = get_object_or_404(Teacher, user=self.request.user)
         return Course.objects.filter(teacher=teacher)
 
 
@@ -1059,16 +1074,11 @@ class TeacherNotificationDetailAPIView(generics.RetrieveUpdateAPIView):
 class CourseCreateAPIView(generics.CreateAPIView):
     queryset = Course.objects.all()
     serializer_class = api_serializer.CourseSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTeacher]
 
     def perform_create(self, serializer):
 
-        teacher_id = self.request.data.get('teacher')
-
-        if teacher_id:
-            teacher = Teacher.objects.get(id=teacher_id)
-        else:
-            teacher = self.request.user.teacher
+        teacher = get_object_or_404(Teacher, user=self.request.user)
 
         serializer.is_valid(raise_exception=True)
         course_instance = serializer.save(teacher=teacher)
@@ -1149,15 +1159,42 @@ class ClearCartAPIView(generics.DestroyAPIView):
             status=status.HTTP_200_OK
         )
 
-class UserProfileView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    permission_classes = [AllowAny]
     serializer_class = ProfileSerializer
 
     def get_object(self):
-        print(self.kwargs)
         user_id = self.kwargs['user_id']
         user = User.objects.get(id=user_id)
         return Profile.objects.get(user=user)
+
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return super().update(request, *args, **kwargs)
+
+
+class UserUpdatePasswordInSessionAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        user_id = request.data.get('user_id')
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+
+        if not all([user_id, old_password, new_password]):
+            return Response({"error": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user.check_password(old_password):
+            return Response({"error": "Current password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
 
 
 class CourseDeleteAPIView(generics.DestroyAPIView):

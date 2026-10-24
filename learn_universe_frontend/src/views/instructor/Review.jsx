@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useEffect, useState} from 'react';
 import Sidebar from './Partials/Sidebar'
 import Header from './Partials/Header'
@@ -159,7 +160,7 @@ function Review() {
                                         {filterReviews.map((review, reviewIndex) => (
                                             <li className="list-group-item p-4 shadow rounded-3" key={reviewIndex}>
                                                 <div className="d-flex">
-                                                    <img
+                                                    <MediaImage kind="avatar"
                                                         src={review?.profile?.image}
                                                         alt="avatar"
                                                         className="rounded-circle avatar-lg"

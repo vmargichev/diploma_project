@@ -74,7 +74,7 @@ class Course(models.Model):
     featured = models.BooleanField(default=False)
     course_id = ShortUUIDField(unique=True, length=6, max_length=20, alphabet=ALPHABET)
     slug = models.SlugField(unique=True, null=True, blank=True)
-    date = models.DateField(default=timezone.now)
+    date = models.DateField(default=timezone.localdate)
 
     def __str__(self):
         return self.title or "Untitled"

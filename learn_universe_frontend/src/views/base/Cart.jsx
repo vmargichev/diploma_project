@@ -1,3 +1,4 @@
+import MediaImage from "../../components/MediaImage.jsx";
 import React, {useContext, useEffect, useState} from 'react'
 import {Link, useNavigate} from 'react-router-dom'
 
@@ -152,7 +153,7 @@ function Cart() {
                                 <td>
                                   <div className="d-lg-flex align-items-center">
                                     <div className="w-100px w-md-80px mb-2 mb-md-0">
-                                      <img
+                                      <MediaImage kind="course"
                                         src={c?.course?.image}
                                         style={{
                                           width: "100px",
